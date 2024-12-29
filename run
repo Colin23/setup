@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+
+# Saves the path of the directory where the executed script is located into the variable and cd's into the directory.
+script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+filter=""
+dry="0"
+
+# While more than one argument
+while [[ $# > 0 ]]; do
+  # If first argument is '--dry'
+  if [[ $1 == "--dry" ]]; then
+    dry="1"
+  else
+    filter="$1"
+  fi
+  # Removes current argument from the argument list
+  shift
+done
+
+log() {
+  if [[ $dry == "1" ]]; then
+    # Prints out everything + the Prefix?
+    echo "[DRY_RUN]: $@"
+  else
+    # Prints out everything?
+    echo "$@"
+  fi
+}
+
+execute() {
+  log "execute $@"
+  # If try run the skip, otherwise continue as planned
+  if [[ $dry == "1" ]]; then
+    return
+  fi
+  "$@"
+}
+
+log "$script_dir -- $filter"
+
+cd "$script_dir" || exit
+scripts="$( find ./runs -maxdepth 1 -mindepth 1 -executable -type f )"
+
+echo "$scripts"
+
+for script in $scripts; do
+  # If this script does not contain the filter, filter it out - no filter means skipping the if
+  if echo "$script" | grep -qv "$filter"; then
+    log "Filtered script [$script], because it doesn't match the passed filter [$filter]"
+    continue
+  fi
+  execute ./"$script"
+done
