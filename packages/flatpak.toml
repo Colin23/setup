@@ -1,0 +1,7 @@
+# Flatpak
+flatpak = [
+    "app.zen_browser.zen",
+    "md.obsidian.Obsidian",
+    "org.keepassxc.KeePassXC",
+    "org.onlyoffice.desktopeditors"
+]

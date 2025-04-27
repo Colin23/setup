@@ -1,0 +1,35 @@
+# Official Arch repository.
+official = [
+    "starship",
+    "zsh-syntax-highlighting",
+    "zsh-autosuggestions",
+    "exa",
+    "bat",
+    "docker",
+    "pavucontrol",
+    "virtualbox-host-modules-arch",
+    "virtualbox",
+    "unzip",
+    "zip",
+    "cloc",
+    "htop",
+    "isoimagewriter",
+    "bats",
+    "flatpak",
+    "tree",
+    "ufw",
+    "packer",
+    "hcloud",
+    "php",
+    "compose"
+]
+
+# Arch user repository
+aur = [
+    "virtualbox-ext-oracle",
+    "carapace-bin",
+    "vesktop-bin",
+    "ventoy-bin",
+    "coppwr",
+    "gleam"
+]
