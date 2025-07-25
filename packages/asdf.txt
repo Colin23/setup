@@ -1,0 +1,105 @@
+# Tooling
+## Installation
+### Manual/Other installation
+C#/C/C++
+.NET
+uv                  # Install directly
+Python              # Install via uv
+ArgoCD
+Tekton
+Rust
+PHP
+
+### asdf
+#### Plugins
+asdf plugin add java https://github.com/halcyon/asdf-java.git
+asdf plugin add kotlin https://github.com/asdf-community/asdf-kotlin.git
+asdf plugin add gradle https://github.com/rfrancis/asdf-gradle.git
+asdf plugin add maven  https://github.com/halcyon/asdf-maven
+asdf plugin add nodejs https://github.com/asdf-vm/asdf-nodejs.git
+asdf plugin add golang https://github.com/asdf-community/asdf-golang.git
+asdf plugin add opentofu https://github.com/virtualroot/asdf-opentofu.git
+asdf plugin add erlang https://github.com/asdf-vm/asdf-erlang.git               # Has many necessary packages
+asdf plugin add elixir https://github.com/asdf-vm/asdf-elixir.git
+asdf plugin add gleam https://github.com/asdf-community/asdf-gleam.git
+asdf plugin add terraform https://github.com/asdf-community/asdf-hashicorp.git
+
+#### Versions
+asdf install java temurin-21.0.8+9.0.LTS
+asdf install kotlin 2.2.0
+asdf install gradle 8.14.3
+asdf install maven 3.9.11
+asdf install nodejs 22.17.1
+asdf install golang 1.24.5
+asdf install opentofu 1.10.3
+asdf install erlang 28.0.2
+asdf install elixir 1.18.4
+asdf install gleam 1.11.1
+asdf install terraform 1.12.2
+
+#### Set tool.versions in home
+asdf set -u <> ##
+set_home stuff aus dem jeweiligen dir in die zshrc rein packen
+
+asdf set -u java temurin-21.0.8+9.0.LTS
+asdf set -u kotlin 2.2.0
+asdf set -u gradle 8.14.3
+asdf set -u maven 3.9.11
+asdf set -u nodejs 22.17.1
+asdf set -u golang 1.24.5
+asdf set -u opentofu 1.10.3
+asdf set -u erlang 28.0.2
+asdf set -u elixir 1.18.4
+asdf set -u gleam 1.11.1
+asdf set -u terraform 1.12.2
+
+#### List installed versions (should show the previously installed version)
+asdf list java
+asdf list kotlin
+asdf list gradle
+asdf list maven
+asdf list nodejs
+asdf list golang
+asdf list opentofu
+asdf list erlang
+asdf list elixir
+asdf list gleam
+asdf list terraform
+
+#### List used tool version and its installation path
+java --version
+which java
+where java
+kotlin -version
+which kotlin
+where kotlin
+gradle --version
+which gradle
+where gradle
+mvn --version
+which mvn
+where mvn
+node -v
+which node
+where node
+go version
+which go
+where go
+tofu -v
+which tofu
+where tofu
+erl -eval 'erlang:display(erlang:system_info(otp_release)), halt().'  -noshell
+which erlang
+where erlang
+elixir --version
+which elixir
+where elixir
+gleam --version
+which gleam
+where gleam
+terraform --version
+which terraform
+where terraform
+
+#### Update plugins
+asdf plugin update --all
