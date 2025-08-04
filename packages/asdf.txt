@@ -23,6 +23,7 @@ asdf plugin add erlang https://github.com/asdf-vm/asdf-erlang.git               
 asdf plugin add elixir https://github.com/asdf-vm/asdf-elixir.git
 asdf plugin add gleam https://github.com/asdf-community/asdf-gleam.git
 asdf plugin add terraform https://github.com/asdf-community/asdf-hashicorp.git
+asdf plugin add dotnet https://github.com/hensou/asdf-dotnet.git
 
 #### Versions
 asdf install java temurin-21.0.8+9.0.LTS
@@ -36,6 +37,7 @@ asdf install erlang 28.0.2
 asdf install elixir 1.18.4
 asdf install gleam 1.11.1
 asdf install terraform 1.12.2
+asdf install dotnet 9.0.303
 
 #### Set tool.versions in home
 asdf set -u <> ##
@@ -52,6 +54,7 @@ asdf set -u erlang 28.0.2
 asdf set -u elixir 1.18.4
 asdf set -u gleam 1.11.1
 asdf set -u terraform 1.12.2
+asdf set -u dotnet 9.0.303
 
 #### List installed versions (should show the previously installed version)
 asdf list java
@@ -100,6 +103,9 @@ where gleam
 terraform --version
 which terraform
 where terraform
+dotnet --version
+which dotnet
+where dotnet
 
 #### Update plugins
 asdf plugin update --all
