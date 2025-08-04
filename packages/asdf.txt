@@ -1,14 +1,12 @@
 # Tooling
 ## Installation
 ### Manual/Other installation
-C#/C/C++
-.NET
 uv                  # Install directly
 Python              # Install via uv
 ArgoCD
 Tekton
-Rust
-PHP
+Rust                # Install rustup
+PHP                 # Install composer via package manager (PHP comes alongside it)
 
 ### asdf
 #### Plugins
