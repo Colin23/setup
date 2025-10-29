@@ -1,0 +1,9 @@
+maven = [
+    "asdf plugin add maven  https://github.com/halcyon/asdf-maven",
+    "asdf install maven 3.9.11", # https://maven.apache.org/docs/history.html
+    "asdf set -u maven 3.9.11",
+    "asdf list maven",
+    "mvn --version",
+    "which mvn",
+    "where mvn"
+]

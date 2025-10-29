@@ -1,0 +1,9 @@
+erlang = [
+    "asdf plugin add erlang https://github.com/asdf-vm/asdf-erlang.git",
+    "asdf install erlang 28.1.1", # https://www.erlang.org/downloads
+    "asdf set -u erlang 28.1.1",
+    "asdf list erlang",
+    "erl -eval 'erlang:display(erlang:system_info(otp_release)), halt().'  -noshell",
+    "which erlang",
+    "where erlang"
+]

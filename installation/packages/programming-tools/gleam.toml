@@ -1,0 +1,9 @@
+gleam = [
+    "asdf plugin add gleam https://github.com/asdf-community/asdf-gleam.git",
+    "asdf install gleam 1.13.0", # https://github.com/gleam-lang/gleam/releases
+    "asdf set -u gleam 1.13.0",
+    "asdf list gleam",
+    "gleam --version",
+    "which gleam",
+    "where gleam"
+]

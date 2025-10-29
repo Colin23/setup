@@ -1,7 +1,0 @@
-# Packages that need manual installation
-manual = [
-    "uv",
-    "sdkman",
-    "nvm",
-    "opentofu"
-]

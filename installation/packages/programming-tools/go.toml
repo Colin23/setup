@@ -1,0 +1,9 @@
+go = [
+    "asdf plugin add golang https://github.com/asdf-community/asdf-golang.git",
+    "asdf install golang 1.25.3", # https://go.dev/doc/devel/release
+    "asdf set -u golang 1.25.3",
+    "asdf list golang",
+    "go version",
+    "which go",
+    "where go"
+]

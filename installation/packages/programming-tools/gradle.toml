@@ -1,0 +1,9 @@
+gradle = [
+    "asdf plugin add gradle https://github.com/rfrancis/asdf-gradle.git",
+    "asdf install gradle 9.2.0", # https://gradle.org/releases/
+    "asdf set -u gradle 9.2.0",
+    "asdf list gradle",
+    "gradle --version",
+    "which gradle",
+    "where gradle"
+]

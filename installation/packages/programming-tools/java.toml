@@ -1,0 +1,9 @@
+java = [
+    "asdf plugin add java https://github.com/halcyon/asdf-java.git",
+    "asdf install java temurin-25.0.0+36.0.LTS", # https://adoptium.net/support/
+    "asdf set -u java temurin-25.0.0+36.0.LTS",
+    "asdf list java",
+    "java --version",
+    "which java",
+    "where java"
+]

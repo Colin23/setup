@@ -1,0 +1,9 @@
+opentofu = [
+    "asdf plugin add opentofu https://github.com/virtualroot/asdf-opentofu.git",
+    "asdf install opentofu 1.10.6", # https://github.com/opentofu/opentofu/releases
+    "asdf set -u opentofu 1.10.6",
+    "asdf list opentofu",
+    "tofu -v",
+    "which tofu",
+    "where tofu"
+]

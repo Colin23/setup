@@ -5,7 +5,6 @@ official = [
     "zsh-autosuggestions",
     "exa",
     "bat",
-    "docker",
     "pavucontrol",
     "virtualbox-host-modules-arch",
     "virtualbox",
@@ -18,10 +17,6 @@ official = [
     "flatpak",
     "tree",
     "ufw",
-    "packer",
-    "hcloud",
-    "php",
-    "compose"
 ]
 
 # Arch user repository
@@ -31,5 +26,4 @@ aur = [
     "vesktop-bin",
     "ventoy-bin",
     "coppwr",
-    "gleam"
 ]

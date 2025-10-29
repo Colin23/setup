@@ -1,0 +1,9 @@
+terraform = [
+    "asdf plugin add terraform https://github.com/asdf-community/asdf-hashicorp.git",
+    "asdf install terraform 1.13.4", # https://releases.hashicorp.com/terraform/
+    "asdf set -u terraform 1.13.4",
+    "asdf list terraform",
+    "terraform --version",
+    "which terraform",
+    "where terraform"
+]

@@ -1,0 +1,9 @@
+node = [
+    "asdf plugin add nodejs https://github.com/asdf-vm/asdf-nodejs.git",
+    "asdf install nodejs v24.10.0", # https://nodejs.org/en/about/previous-releases
+    "asdf set -u nodejs v24.10.0",
+    "asdf list maven",
+    "node -v",
+    "which node",
+    "where node"
+]

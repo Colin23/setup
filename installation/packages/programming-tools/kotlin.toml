@@ -1,0 +1,9 @@
+kotlin = [
+    "asdf plugin add kotlin https://github.com/asdf-community/asdf-kotlin.git",
+    "asdf install kotlin 2.2.21", # https://kotlinlang.org/docs/releases.html
+    "asdf set -u kotlin 2.2.21",
+    "asdf list kotlin",
+    "kotlin -version",
+    "which kotlin",
+    "where kotlin"
+]

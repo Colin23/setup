@@ -1,0 +1,9 @@
+elixir = [
+    "asdf plugin add elixir https://github.com/asdf-vm/asdf-elixir.git",
+    "asdf install elixir 1.19.1", # https://github.com/elixir-lang/elixir/releases
+    "asdf set -u elixir 1.19.1",
+    "asdf list elixir",
+    "elixir --version",
+    "which elixir",
+    "where elixir"
+]
