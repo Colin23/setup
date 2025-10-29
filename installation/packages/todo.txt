@@ -1,0 +1,28 @@
+azure-cli
+bash
+bat
+carapace-bin
+cloc
+docker
+eza
+fastfetch
+firefox
+flatpak
+
+fzf
+microsoft edge
+php
+uv
+    python
+tekton-cli
+tuptime
+vim
+zsh
+
+### Manual/Other installation
+uv                  # Install directly
+Python              # Install via uv
+ArgoCD
+Tekton
+Rust                # Install rustup
+PHP                 # Install composer via package manager (PHP comes alongside it)
