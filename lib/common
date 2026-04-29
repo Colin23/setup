@@ -164,6 +164,38 @@ flatpak_install() {
 # ──────────────────────────────────────────────
 # File / Symlink Helpers
 # ──────────────────────────────────────────────
+# Resolve a path to its canonical absolute form in a cross-platform way.
+# Preference order:
+#   1) greadlink -f (coreutils on macOS)
+#   2) readlink -f
+#   3) realpath
+#   4) python3 / perl fallback
+resolve_path() {
+    local path="$1"
+
+    if has_cmd greadlink; then
+        greadlink -f -- "$path" 2>/dev/null && return 0
+    fi
+
+    if has_cmd readlink; then
+        readlink -f -- "$path" 2>/dev/null && return 0
+    fi
+
+    if has_cmd realpath; then
+        realpath -- "$path" 2>/dev/null && return 0
+    fi
+
+    if has_cmd python3; then
+        python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$path" 2>/dev/null && return 0
+    fi
+
+    if has_cmd perl; then
+        perl -MCwd=abs_path -e 'print abs_path(shift)' "$path" 2>/dev/null && return 0
+    fi
+
+    return 1
+}
+
 # Create a symlink safely.
 # If target exists and is already the correct symlink, no-op.
 # If target exists and is something else, backs it up first.
@@ -178,9 +210,15 @@ ensure_symlink() {
     fi
 
     # Already correct
-    if [[ -L "$link" && "$(readlink -f "$link")" == "$(readlink -f "$source")" ]]; then
-        log_info "symlink already correct: $link -> $source"
-        return 0
+    if [[ -L "$link" ]]; then
+        local resolved_link resolved_source
+        resolved_link="$(resolve_path "$link" 2>/dev/null || true)"
+        resolved_source="$(resolve_path "$source" 2>/dev/null || true)"
+
+        if [[ -n "$resolved_link" && -n "$resolved_source" && "$resolved_link" == "$resolved_source" ]]; then
+            log_info "symlink already correct: $link -> $source"
+            return 0
+        fi
     fi
 
     # Backup existing file/dir/symlink
@@ -188,12 +226,23 @@ ensure_symlink() {
         local backup
         backup="${link}.backup.$(date +%Y%m%d%H%M%S)"
         log_warn "backing up existing $link -> $backup"
-        run_cmd mv "$link" "$backup"
+        if ! run_cmd mv "$link" "$backup"; then
+            log_error "ensure_symlink: failed to back up existing path: $link"
+            return 1
+        fi
     fi
 
     # Create parent directory if needed
-    run_cmd mkdir -p "$(dirname "$link")"
-    run_cmd ln -sf "$source" "$link"
+    if ! run_cmd mkdir -p "$(dirname "$link")"; then
+        log_error "ensure_symlink: failed to create parent directory for: $link"
+        return 1
+    fi
+
+    if ! run_cmd ln -sf "$source" "$link"; then
+        log_error "ensure_symlink: failed to create symlink: $link -> $source"
+        return 1
+    fi
+
     log_success "symlink created: $link -> $source"
 }
 
