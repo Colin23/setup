@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+set -euo pipefail
+# 40-firewall — Firewall setup
+#
+# Installs: ufw
+# Configures: enables ufw with default deny incoming, allow outgoing
+# Verify:   ufw status
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1091
+source "$SCRIPT_DIR/../lib/common"
+
+module_header "40-firewall" "Firewall: ufw install and basic configuration"
+
+require_os arch ubuntu debian
+
+# ── Install ──
+log_info "Installing ufw..."
+pkg_install ufw
+
+# ── Configure (idempotent) ──
+log_info "Configuring ufw defaults..."
+run_cmd sudo ufw default deny incoming
+run_cmd sudo ufw default allow outgoing
+
+# Enable if not already active
+ufw_status="$(sudo ufw status 2>/dev/null || echo "inactive")"
+if echo "$ufw_status" | grep -q "Status: active"; then
+    log_info "ufw is already active"
+else
+    log_info "Enabling ufw..."
+    run_cmd sudo ufw --force enable
+fi
+
+# On Arch, enable the systemd service
+if [[ "$SETUP_OS" == "arch" ]]; then
+    run_cmd sudo systemctl enable ufw --now 2>/dev/null || true
+fi
+
+# ── Verify ──
+log_info "Verifying firewall..."
+if has_cmd ufw; then
+    log_success "ufw installed"
+    sudo ufw status verbose
+else
+    log_error "ufw not found"
+fi

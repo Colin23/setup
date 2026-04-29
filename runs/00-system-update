@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+set -euo pipefail
+# 00-system-update — System update + base packages
+#
+# Installs: bash, curl, unzip, zip, base-devel (Arch)
+# Verify:   bash --version, curl --version, unzip -v, zip -v
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1091
+source "$SCRIPT_DIR/../lib/common"
+
+module_header "00-system-update" "System update and base packages"
+
+require_os arch ubuntu debian macos
+
+# ── System update ──
+log_info "Updating system packages..."
+case "$SETUP_OS" in
+    arch)
+        run_cmd sudo pacman -Syu --noconfirm
+        ;;
+    ubuntu | debian)
+        run_cmd sudo apt-get update -y
+        run_cmd sudo apt-get upgrade -y
+        ;;
+    macos)
+        run_cmd brew update
+        run_cmd brew upgrade
+        ;;
+esac
+
+# ── Base packages ──
+log_info "Installing base packages..."
+case "$SETUP_OS" in
+    arch)
+        pkg_install base-devel bash curl git unzip zip
+        ;;
+    ubuntu | debian)
+        pkg_install build-essential bash curl git unzip zip
+        ;;
+    macos)
+        pkg_install bash curl git unzip zip
+        ;;
+esac
+
+# ── Verify ──
+log_info "Verifying base packages..."
+for cmd in bash curl git unzip zip; do
+    if has_cmd "$cmd"; then
+        log_success "$cmd: $(command -v "$cmd")"
+    else
+        log_error "$cmd not found after install"
+    fi
+done

@@ -47,7 +47,7 @@ This phase guarantees a reliable onboarding path.
 ## Phase 2 — Runner + Shared Library
 
 - Implement robust runner:
-    - deterministic order (`runs/NN-name.sh`)
+    - deterministic order (`runs/NN-name`)
     - `--dry-run`, `--profile`, `--only`, `--skip`
     - module summary output
     - non-zero exit on failures

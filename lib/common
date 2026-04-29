@@ -39,11 +39,11 @@ _log() {
     echo -e "${color}[${level}]${_CLR_RESET} ${prefix}${message}"
 }
 
-log_info()    { _log "INFO"    "$_CLR_BLUE"   "$1"; }
-log_warn()    { _log "WARN"    "$_CLR_YELLOW"  "$1"; }
-log_error()   { _log "ERROR"   "$_CLR_RED"     "$1"; }
-log_success() { _log "OK"      "$_CLR_GREEN"   "$1"; }
-log_step()    { echo -e "\n${_CLR_BOLD}── $1 ──${_CLR_RESET}"; }
+log_info() { _log "INFO" "$_CLR_BLUE" "$1"; }
+log_warn() { _log "WARN" "$_CLR_YELLOW" "$1"; }
+log_error() { _log "ERROR" "$_CLR_RED" "$1"; }
+log_success() { _log "OK" "$_CLR_GREEN" "$1"; }
+log_step() { echo -e "\n${_CLR_BOLD}── $1 ──${_CLR_RESET}"; }
 
 # ──────────────────────────────────────────────
 # OS Detection
@@ -54,10 +54,10 @@ detect_os() {
         # shellcheck disable=SC1091
         source /etc/os-release
         case "${ID:-}" in
-            arch|endeavouros|manjaro)   SETUP_OS="arch" ;;
-            ubuntu|pop)                 SETUP_OS="ubuntu" ;;
-            debian)                     SETUP_OS="debian" ;;
-            *)                          SETUP_OS="unknown" ;;
+            arch | endeavouros | manjaro) SETUP_OS="arch" ;;
+            ubuntu | pop | neon) SETUP_OS="ubuntu" ;;
+            debian) SETUP_OS="debian" ;;
+            *) SETUP_OS="unknown" ;;
         esac
     elif [[ "$(uname -s)" == "Darwin" ]]; then
         SETUP_OS="macos"
@@ -119,7 +119,7 @@ pkg_install() {
         arch)
             run_cmd sudo pacman -S --noconfirm --needed "$@"
             ;;
-        ubuntu|debian)
+        ubuntu | debian)
             run_cmd sudo apt-get install -y "$@"
             ;;
         macos)

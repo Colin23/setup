@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+# 99-manual — Manual installation reminders
+#
+# This module does NOT install anything automatically.
+# It prints reminders for tools that require manual intervention.
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1091
+source "$SCRIPT_DIR/../lib/common"
+
+module_header "99-manual" "Manual installation reminders and post-setup checklist"
+
+log_info "The following items require manual action:"
+echo ""
+
+echo "  1. JetBrains Toolbox"
+echo "     → https://www.jetbrains.com/toolbox-app/"
+echo ""
+
+echo "  2. Import SSH key into Git provider (GitHub/GitLab)"
+echo "     → cat ~/.ssh/id_ed25519.pub"
+echo ""
+
+echo "  3. Import KeePassXC database"
+echo "     → Open KeePassXC and point to your database file"
+echo ""
+
+echo "  4. Log into Firefox / sync browser profile"
+echo ""
+
+echo "  5. Configure dotfiles symlinks"
+echo "     → Review and update runs/80-dotfiles"
+echo ""
+
+echo "  6. Set up Obsidian vault"
+echo "     → Point Obsidian to your vault location"
+echo ""
+
+log_info "All manual steps listed above. Complete them at your convenience."

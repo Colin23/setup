@@ -1,53 +1,174 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
-# Saves the path of the directory where the executed script is located into the variable and cd's into the directory.
-script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-filter=""
-dry="0"
+# ──────────────────────────────────────────────
+# Setup Runner — Main Entrypoint
+# ──────────────────────────────────────────────
+# Usage:
+#   ./run                           # run all modules
+#   ./run --dry-run                 # preview without executing
+#   ./run --only core-cli,shell     # run only matching modules
+#   ./run --skip browser,firewall   # skip matching modules
+#   ./run --only shell --dry-run    # combine flags freely
 
-# While more than one argument
-while [[ $# > 0 ]]; do
-  # If first argument is '--dry'
-  if [[ $1 == "--dry" ]]; then
-    dry="1"
-  else
-    filter="$1"
-  fi
-  # Removes current argument from the argument list
-  shift
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/lib/common"
+
+# ──────────────────────────────────────────────
+# Argument Parsing
+# ──────────────────────────────────────────────
+export DRY_RUN="0"
+ONLY=""
+SKIP=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --dry-run)
+            DRY_RUN="1"
+            ;;
+        --only)
+            ONLY="${2:-}"
+            if [[ -z "$ONLY" ]]; then
+                log_error "Missing value for --only"
+                exit 1
+            fi
+            shift
+            ;;
+        --skip)
+            SKIP="${2:-}"
+            if [[ -z "$SKIP" ]]; then
+                log_error "Missing value for --skip"
+                exit 1
+            fi
+            shift
+            ;;
+        --help | -h)
+            echo "Usage: ./run [OPTIONS]"
+            echo ""
+            echo "Options:"
+            echo "  --dry-run              Preview actions without executing"
+            echo "  --only <a,b,c>         Run only modules matching these names"
+            echo "  --skip <a,b,c>         Skip modules matching these names"
+            echo "  --help, -h             Show this help"
+            exit 0
+            ;;
+        *)
+            log_error "Unknown argument: $1 (use --help for usage)"
+            exit 1
+            ;;
+    esac
+    shift
 done
 
-log() {
-  if [[ $dry == "1" ]]; then
-    # Prints out everything + the Prefix?
-    echo "[DRY_RUN]: $@"
-  else
-    # Prints out everything?
-    echo "$@"
-  fi
+# ──────────────────────────────────────────────
+# Module Discovery
+# ──────────────────────────────────────────────
+RUNS_DIR="$SCRIPT_DIR/runs"
+
+if [[ ! -d "$RUNS_DIR" ]]; then
+    log_error "Modules directory not found: $RUNS_DIR"
+    exit 1
+fi
+
+# Discover and sort deterministically by filename
+mapfile -t ALL_SCRIPTS < <(find "$RUNS_DIR" -maxdepth 1 -type f -executable | sort)
+
+if [[ ${#ALL_SCRIPTS[@]} -eq 0 ]]; then
+    log_warn "No executable modules found in $RUNS_DIR"
+    exit 0
+fi
+
+# ──────────────────────────────────────────────
+# Filtering Logic
+# ──────────────────────────────────────────────
+# Check if a module name matches any entry in a comma-separated list.
+# Matching is substring-based: "cli" matches "10-core-cli".
+matches_filter() {
+    local module_name="$1"
+    local filter_list="$2"
+
+    IFS=',' read -ra filters <<<"$filter_list"
+    for filter in "${filters[@]}"; do
+        filter="$(echo "$filter" | xargs)" # trim whitespace
+        if [[ "$module_name" == *"$filter"* ]]; then
+            return 0
+        fi
+    done
+    return 1
 }
 
-execute() {
-  log "execute $@"
-  # If try run the skip, otherwise continue as planned
-  if [[ $dry == "1" ]]; then
-    return
-  fi
-  "$@"
+should_run() {
+    local module_name="$1"
+
+    # --only filter (if set, module must match)
+    if [[ -n "$ONLY" ]]; then
+        if ! matches_filter "$module_name" "$ONLY"; then
+            return 1
+        fi
+    fi
+
+    # --skip filter (if set, module must NOT match)
+    if [[ -n "$SKIP" ]]; then
+        if matches_filter "$module_name" "$SKIP"; then
+            return 1
+        fi
+    fi
+
+    return 0
 }
 
-log "$script_dir -- $filter"
+# ──────────────────────────────────────────────
+# Execution
+# ──────────────────────────────────────────────
+log_step "Setup Runner"
+log_info "OS: $SETUP_OS | dry-run: $DRY_RUN | only: ${ONLY:-<none>} | skip: ${SKIP:-<none>}"
 
-cd "$script_dir" || exit
-scripts="$( find ./runs -maxdepth 1 -mindepth 1 -executable -type f )"
+declare -a succeeded=()
+declare -a failed=()
+declare -a skipped=()
 
-echo "$scripts"
+for script in "${ALL_SCRIPTS[@]}"; do
+    module_name="$(basename "$script")"
 
-for script in $scripts; do
-  # If this script does not contain the filter, filter it out - no filter means skipping the if
-  if echo "$script" | grep -qv "$filter"; then
-    log "Filtered script [$script], because it doesn't match the passed filter [$filter]"
-    continue
-  fi
-  execute ./"$script"
+    if ! should_run "$module_name"; then
+        skipped+=("$module_name")
+        log_info "Skipped: $module_name"
+        continue
+    fi
+
+    log_step "Running: $module_name"
+
+    if [[ "$DRY_RUN" == "1" ]]; then
+        log_info "would execute: $script"
+        succeeded+=("$module_name")
+        continue
+    fi
+
+    # Run module in a subshell so set -e in module doesn't kill the runner
+    if (
+        export DRY_RUN
+        "$script"
+    ); then
+        succeeded+=("$module_name")
+        log_success "Completed: $module_name"
+    else
+        failed+=("$module_name")
+        log_error "Failed: $module_name"
+    fi
 done
+
+# ──────────────────────────────────────────────
+# Summary
+# ──────────────────────────────────────────────
+echo ""
+log_step "Run Summary"
+log_success "Succeeded (${#succeeded[@]}): ${succeeded[*]:-none}"
+if [[ ${#skipped[@]} -gt 0 ]]; then
+    log_info "Skipped   (${#skipped[@]}): ${skipped[*]}"
+fi
+if [[ ${#failed[@]} -gt 0 ]]; then
+    log_error "Failed    (${#failed[@]}): ${failed[*]}"
+    exit 1
+fi
+
+log_success "All modules completed successfully."
