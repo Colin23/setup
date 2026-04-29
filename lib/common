@@ -1,0 +1,218 @@
+#!/usr/bin/env bash
+# lib/common — Shared helper library for all modules and the runner.
+#
+# Usage: source this file at the top of every module and the runner.
+#   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+#   source "$SCRIPT_DIR/../lib/common"
+#
+# Provides:
+#   Logging:      log_info, log_warn, log_error, log_success, log_step
+#   OS detection: detect_os, require_os
+#   Commands:     has_cmd, require_cmd, run_cmd
+#   Packages:     pkg_install
+#   Files:        ensure_symlink
+#   State:        DRY_RUN (env var, "0" or "1")
+
+# ──────────────────────────────────────────────
+# Colors (disabled automatically if not a terminal)
+# ──────────────────────────────────────────────
+if [[ -t 1 ]]; then
+    _CLR_RESET="\033[0m"
+    _CLR_RED="\033[0;31m"
+    _CLR_GREEN="\033[0;32m"
+    _CLR_YELLOW="\033[0;33m"
+    _CLR_BLUE="\033[0;34m"
+    _CLR_BOLD="\033[1m"
+else
+    _CLR_RESET="" _CLR_RED="" _CLR_GREEN="" _CLR_YELLOW="" _CLR_BLUE="" _CLR_BOLD=""
+fi
+
+# ──────────────────────────────────────────────
+# Logging
+# ──────────────────────────────────────────────
+_log() {
+    local level="$1" color="$2" message="$3"
+    local prefix=""
+    if [[ "${DRY_RUN:-0}" == "1" ]]; then
+        prefix="[DRY-RUN] "
+    fi
+    echo -e "${color}[${level}]${_CLR_RESET} ${prefix}${message}"
+}
+
+log_info()    { _log "INFO"    "$_CLR_BLUE"   "$1"; }
+log_warn()    { _log "WARN"    "$_CLR_YELLOW"  "$1"; }
+log_error()   { _log "ERROR"   "$_CLR_RED"     "$1"; }
+log_success() { _log "OK"      "$_CLR_GREEN"   "$1"; }
+log_step()    { echo -e "\n${_CLR_BOLD}── $1 ──${_CLR_RESET}"; }
+
+# ──────────────────────────────────────────────
+# OS Detection
+# ──────────────────────────────────────────────
+# Sets SETUP_OS to one of: arch, ubuntu, debian, macos, unknown
+detect_os() {
+    if [[ -f /etc/os-release ]]; then
+        # shellcheck disable=SC1091
+        source /etc/os-release
+        case "${ID:-}" in
+            arch|endeavouros|manjaro)   SETUP_OS="arch" ;;
+            ubuntu|pop)                 SETUP_OS="ubuntu" ;;
+            debian)                     SETUP_OS="debian" ;;
+            *)                          SETUP_OS="unknown" ;;
+        esac
+    elif [[ "$(uname -s)" == "Darwin" ]]; then
+        SETUP_OS="macos"
+    else
+        SETUP_OS="unknown"
+    fi
+    export SETUP_OS
+}
+
+# Abort if current OS is not in the allowed list.
+# Usage: require_os arch ubuntu
+require_os() {
+    detect_os
+    for allowed in "$@"; do
+        if [[ "$SETUP_OS" == "$allowed" ]]; then
+            return 0
+        fi
+    done
+    log_error "This module requires one of: $*  (detected: $SETUP_OS)"
+    exit 1
+}
+
+# ──────────────────────────────────────────────
+# Command Helpers
+# ──────────────────────────────────────────────
+# Returns 0 if command exists on PATH.
+has_cmd() {
+    command -v "$1" &>/dev/null
+}
+
+# Abort if command is missing.
+require_cmd() {
+    if ! has_cmd "$1"; then
+        log_error "Required command not found: $1"
+        exit 1
+    fi
+}
+
+# Execute a command, respecting DRY_RUN.
+# In dry-run mode, prints the command instead of executing it.
+run_cmd() {
+    if [[ "${DRY_RUN:-0}" == "1" ]]; then
+        log_info "would run: $*"
+        return 0
+    fi
+    log_info "running: $*"
+    "$@"
+}
+
+# ──────────────────────────────────────────────
+# Package Installation (OS-aware)
+# ──────────────────────────────────────────────
+# Install one or more packages using the system package manager.
+# Idempotent: uses --needed (pacman) or skips already-installed (apt).
+# Usage: pkg_install git curl openssh
+pkg_install() {
+    detect_os
+    case "$SETUP_OS" in
+        arch)
+            run_cmd sudo pacman -S --noconfirm --needed "$@"
+            ;;
+        ubuntu|debian)
+            run_cmd sudo apt-get install -y "$@"
+            ;;
+        macos)
+            run_cmd brew install "$@"
+            ;;
+        *)
+            log_error "pkg_install: unsupported OS '$SETUP_OS'"
+            return 1
+            ;;
+    esac
+}
+
+# Install one or more AUR packages (Arch only, requires paru or yay).
+# Usage: aur_install carapace-bin
+aur_install() {
+    detect_os
+    if [[ "$SETUP_OS" != "arch" ]]; then
+        log_warn "aur_install: skipping on non-Arch OS ($SETUP_OS)"
+        return 0
+    fi
+
+    local aur_helper=""
+    if has_cmd paru; then
+        aur_helper="paru"
+    elif has_cmd yay; then
+        aur_helper="yay"
+    else
+        log_error "aur_install: no AUR helper found (install paru or yay first)"
+        return 1
+    fi
+
+    run_cmd "$aur_helper" -S --noconfirm --needed "$@"
+}
+
+# Install one or more Flatpak packages.
+# Usage: flatpak_install org.keepassxc.KeePassXC md.obsidian.Obsidian
+flatpak_install() {
+    require_cmd flatpak
+    run_cmd flatpak install -y --noninteractive flathub "$@"
+}
+
+# ──────────────────────────────────────────────
+# File / Symlink Helpers
+# ──────────────────────────────────────────────
+# Create a symlink safely.
+# If target exists and is already the correct symlink, no-op.
+# If target exists and is something else, backs it up first.
+# Usage: ensure_symlink /path/to/source /path/to/link
+ensure_symlink() {
+    local source="$1"
+    local link="$2"
+
+    if [[ ! -e "$source" ]]; then
+        log_error "ensure_symlink: source does not exist: $source"
+        return 1
+    fi
+
+    # Already correct
+    if [[ -L "$link" && "$(readlink -f "$link")" == "$(readlink -f "$source")" ]]; then
+        log_info "symlink already correct: $link -> $source"
+        return 0
+    fi
+
+    # Backup existing file/dir/symlink
+    if [[ -e "$link" || -L "$link" ]]; then
+        local backup
+        backup="${link}.backup.$(date +%Y%m%d%H%M%S)"
+        log_warn "backing up existing $link -> $backup"
+        run_cmd mv "$link" "$backup"
+    fi
+
+    # Create parent directory if needed
+    run_cmd mkdir -p "$(dirname "$link")"
+    run_cmd ln -sf "$source" "$link"
+    log_success "symlink created: $link -> $source"
+}
+
+# ──────────────────────────────────────────────
+# Module Metadata Helper
+# ──────────────────────────────────────────────
+# Call at the top of each module to declare metadata and log entry.
+# Usage: module_header "10-core-cli" "Core CLI tools: bat, eza, fzf, etc."
+module_header() {
+    local name="$1"
+    local description="${2:-}"
+    log_step "Module: $name"
+    if [[ -n "$description" ]]; then
+        log_info "$description"
+    fi
+}
+
+# ──────────────────────────────────────────────
+# Initialize
+# ──────────────────────────────────────────────
+# Auto-detect OS on source so it's available immediately.
+detect_os
