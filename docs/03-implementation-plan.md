@@ -30,7 +30,7 @@ This phase guarantees a reliable onboarding path.
 
 ## Deliverables
 
-- `installation/` onboarding script(s) and docs
+- `bootstrap/` onboarding script(s) and docs
 - HTTPS-first clone flow for public setup repo
 - SSH key generation if missing
 - guided pause to register key in Git provider

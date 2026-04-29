@@ -12,6 +12,7 @@
 
 ## Directory Layout (target)
 
+- `bootstrap/` -> first-run onboarding scripts (SSH, identity, dotfiles)
 - `run` -> main entrypoint
 - `lib/` -> common functions
 - `runs/` -> modules (`NN-name.sh`)

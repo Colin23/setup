@@ -33,6 +33,26 @@
 - **Pre-merge / milestone**: VM snapshot test on Arch.
 - **Before real machine apply**: full VM run twice (verify idempotency).
 
+## Concrete Tooling
+
+### Fast loop: Docker (non-GUI, non-systemd modules)
+
+- `docker run -it archlinux:latest bash`
+- Mount repo into container for rapid iteration
+- Cannot test: systemd, desktop apps, firewall, display-related modules
+
+### Full system test: GNOME Boxes or virt-manager (QEMU/KVM)
+
+- Create Arch VM from ISO
+- Snapshot immediately after clean OS install
+- Test cycle: restore snapshot → run setup → verify → revert
+- Near-native performance, easy snapshot management
+
+### Real hardware
+
+- Spare laptop for occasional end-to-end validation
+- Only after container + VM confidence is established
+
 ## Why Not Reinstall OS Repeatedly?
 
 Too slow. Prefer:

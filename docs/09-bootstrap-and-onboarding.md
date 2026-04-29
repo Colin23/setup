@@ -36,7 +36,7 @@ Use HTTPS for first clone so it works before SSH keys exist.
 
 ## Step 2 — Start bootstrap
 
-Run bootstrap command from this repo (to be implemented under `installation/`).
+Run bootstrap command from this repo (to be implemented under `bootstrap/`).
 
 Bootstrap responsibilities:
 

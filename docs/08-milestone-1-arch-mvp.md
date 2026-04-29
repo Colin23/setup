@@ -40,12 +40,13 @@ Deliver a rerunnable, idempotent-ish setup system for Arch-based systems with sa
 ### 4) Arch MVP modules
 
 - [ ] 00-system-update
-- [ ] 10-core-cli
-- [ ] 20-shell
-- [ ] 30-git
-- [ ] 40-runtimes (split if needed)
-- [ ] 50-dev-tools
-- [ ] 90-dotfiles
+- [ ] 10-core-cli (bat, eza, fzf, tree, cloc, htop, fastfetch, wget)
+- [ ] 20-shell (zsh, starship, oh-my-zsh plugins, carapace)
+- [ ] 30-git-ssh (git, openssh, SSH key bootstrap)
+- [ ] 40-firewall (ufw)
+- [ ] 50-browser (firefox)
+- [ ] 80-dotfiles
+- [ ] 90-dev-quality (shellcheck, shfmt, bats)
 - [ ] 99-manual
 
 ### 5) Profiles
