@@ -2,7 +2,7 @@
 set -euo pipefail
 # scripts/lint — Static analysis: shellcheck + shfmt
 #
-# Requires: shellcheck, shfmt (run ./scripts/dev-setup to install)
+# Requires: shellcheck, shfmt (run ./run --only dev-quality to install)
 # Usage:    ./scripts/lint          # check only
 #           ./scripts/lint --fix    # auto-format with shfmt, then check
 

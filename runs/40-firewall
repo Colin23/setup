@@ -23,6 +23,13 @@ log_info "Configuring ufw defaults..."
 run_cmd sudo ufw default deny incoming
 run_cmd sudo ufw default allow outgoing
 
+# Ensure SSH is allowed before enabling (prevent lockout)
+ufw_status="$(sudo ufw status 2>/dev/null || echo "")"
+if ! echo "$ufw_status" | grep -qE "OpenSSH|22/tcp"; then
+    log_info "Allowing SSH through firewall..."
+    run_cmd sudo ufw allow OpenSSH
+fi
+
 # Enable if not already active
 ufw_status="$(sudo ufw status 2>/dev/null || echo "inactive")"
 if echo "$ufw_status" | grep -q "Status: active"; then
@@ -34,7 +41,10 @@ fi
 
 # On Arch, enable the systemd service
 if [[ "$SETUP_OS" == "arch" ]]; then
-    run_cmd sudo systemctl enable ufw --now 2>/dev/null || true
+    if ! run_cmd sudo systemctl enable ufw --now; then
+        log_error "Failed to enable ufw systemd service"
+        exit 1
+    fi
 fi
 
 # ── Verify ──

@@ -45,10 +45,17 @@ esac
 
 # ── Verify ──
 log_info "Verifying base packages..."
+missing_packages=()
 for cmd in bash curl git unzip zip; do
     if has_cmd "$cmd"; then
         log_success "$cmd: $(command -v "$cmd")"
     else
         log_error "$cmd not found after install"
+        missing_packages+=("$cmd")
     fi
 done
+
+if [[ ${#missing_packages[@]} -gt 0 ]]; then
+    log_error "Missing packages after install: ${missing_packages[*]}"
+    exit 1
+fi

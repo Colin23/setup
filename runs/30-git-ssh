@@ -64,7 +64,9 @@ fi
 # ── SSH agent ──
 if [[ -f "$SSH_KEY_PATH" ]]; then
     log_info "Ensuring SSH key is added to agent..."
-    eval "$(ssh-agent -s)" &>/dev/null || true
+    if [[ -z "${SSH_AUTH_SOCK:-}" ]] || ! ssh-add -l &>/dev/null; then
+        eval "$(ssh-agent -s)" &>/dev/null || true
+    fi
     run_cmd ssh-add "$SSH_KEY_PATH" 2>/dev/null || log_warn "Could not add key to agent"
 fi
 
@@ -79,7 +81,7 @@ if [[ -z "$(git config --global user.name 2>/dev/null || true)" ]]; then
         log_warn "Non-interactive shell — skipping git user.name prompt"
     fi
 else
-    log_info "git user.name already set: $(git config --global user.name)"
+    log_info "git user.name is already set"
 fi
 
 if [[ -z "$(git config --global user.email 2>/dev/null || true)" ]]; then
@@ -92,7 +94,7 @@ if [[ -z "$(git config --global user.email 2>/dev/null || true)" ]]; then
         log_warn "Non-interactive shell — skipping git user.email prompt"
     fi
 else
-    log_info "git user.email already set: $(git config --global user.email)"
+    log_info "git user.email already set"
 fi
 
 # ── Verify ──

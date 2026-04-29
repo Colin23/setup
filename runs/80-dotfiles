@@ -29,11 +29,16 @@ fi
 
 # ── Clone or update ──
 if [[ -d "$DOTFILES_DIR/.git" ]]; then
-    log_info "Dotfiles repo already cloned at $DOTFILES_DIR, pulling latest..."
-    run_cmd git -C "$DOTFILES_DIR" pull --ff-only
-else
-    log_info "Cloning dotfiles repo..."
-    run_cmd git clone "$DOTFILES_REPO" "$DOTFILES_DIR"
+    existing_remote="$(git -C "$DOTFILES_DIR" remote get-url origin 2>/dev/null || echo "")"
+    if [[ "$existing_remote" == "$DOTFILES_REPO" ]]; then
+        log_info "Dotfiles repo already cloned at $DOTFILES_DIR, pulling latest..."
+        run_cmd git -C "$DOTFILES_DIR" pull --ff-only
+    else
+        log_error "Existing repo at $DOTFILES_DIR has a different remote: $existing_remote (expected: $DOTFILES_REPO)"
+        log_info "Removing mismatched repo and re-cloning..."
+        run_cmd rm -rf "$DOTFILES_DIR"
+        run_cmd git clone "$DOTFILES_REPO" "$DOTFILES_DIR"
+    fi
 fi
 
 # ── Symlink management ──
