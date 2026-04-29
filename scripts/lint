@@ -24,7 +24,7 @@ command -v shfmt &>/dev/null || MISSING+=(shfmt)
 if [[ ${#MISSING[@]} -gt 0 ]]; then
     echo "ERROR: Missing required tools: ${MISSING[*]}"
     echo ""
-    echo "Run ./scripts/dev-setup to install them."
+    echo "Run ./run --only dev-quality to install them."
     exit 1
 fi
 
