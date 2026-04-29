@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+set -euo pipefail
+# 80-dotfiles — Dotfiles integration
+#
+# Clones private dotfiles repo (if SSH is available) and symlinks configs.
+# Safe to rerun: checks existing state before acting.
+#
+# Convention:
+#   Dotfiles repo cloned to: $HOME/.dotfiles
+#   Symlinks managed from there into $HOME and $XDG_CONFIG_HOME
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1091
+source "$SCRIPT_DIR/../lib/common"
+
+module_header "80-dotfiles" "Dotfiles: clone repo and symlink configs"
+
+# ── Configuration ──
+# TODO: Set private dotfiles repo URL here
+DOTFILES_REPO="${DOTFILES_REPO:-}"
+DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
+
+if [[ -z "$DOTFILES_REPO" ]]; then
+    log_warn "DOTFILES_REPO is not set. Skipping dotfiles setup."
+    log_info "Set DOTFILES_REPO env var or edit this script to enable."
+    log_info "Example: export DOTFILES_REPO=git@github.com:youruser/dotfiles.git"
+    exit 0
+fi
+
+# ── Clone or update ──
+if [[ -d "$DOTFILES_DIR/.git" ]]; then
+    existing_remote="$(git -C "$DOTFILES_DIR" remote get-url origin 2>/dev/null || echo "")"
+    if [[ "$existing_remote" == "$DOTFILES_REPO" ]]; then
+        log_info "Dotfiles repo already cloned at $DOTFILES_DIR, pulling latest..."
+        run_cmd git -C "$DOTFILES_DIR" pull --ff-only
+    else
+        log_error "Existing repo at $DOTFILES_DIR has a different remote: $existing_remote (expected: $DOTFILES_REPO)"
+        log_info "Removing mismatched repo and re-cloning..."
+        run_cmd rm -rf "$DOTFILES_DIR"
+        run_cmd git clone "$DOTFILES_REPO" "$DOTFILES_DIR"
+    fi
+fi
+
+# ── Symlink management ──
+# Add your symlink mappings here as you build out your dotfiles repo.
+# Examples:
+#   ensure_symlink "$DOTFILES_DIR/.zshrc"        "$HOME/.zshrc"
+#   ensure_symlink "$DOTFILES_DIR/.config/starship.toml" "${XDG_CONFIG_HOME:-$HOME/.config}/starship.toml"
+
+log_info "TODO: Add symlink mappings once dotfiles repo structure is finalized"
+
+# ── Verify ──
+if [[ -d "$DOTFILES_DIR/.git" ]]; then
+    log_success "Dotfiles repo present at $DOTFILES_DIR"
+else
+    log_warn "Dotfiles repo not found"
+fi

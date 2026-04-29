@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -euo pipefail
+# 50-browser — Browser installation
+#
+# Installs: firefox
+# Verify:   firefox --version
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1091
+source "$SCRIPT_DIR/../lib/common"
+
+module_header "50-browser" "Browser: firefox"
+
+require_os arch ubuntu debian macos
+
+# ── Install ──
+log_info "Installing firefox..."
+case "$SETUP_OS" in
+    arch)
+        pkg_install firefox
+        ;;
+    ubuntu | debian)
+        pkg_install firefox
+        ;;
+    macos)
+        run_cmd brew install --cask firefox
+        ;;
+esac
+
+# ── Verify ──
+if has_cmd firefox; then
+    log_success "firefox installed"
+else
+    log_warn "firefox not found on PATH (may still be installed as desktop app)"
+fi

@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+set -euo pipefail
+# 90-dev-quality — Developer quality tools (linting, formatting)
+#
+# Installs: shellcheck, shfmt
+# Verify:   shellcheck --version, shfmt --version
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1091
+source "$SCRIPT_DIR/../lib/common"
+
+module_header "90-dev-quality" "Dev quality tools: shellcheck, shfmt"
+
+require_os arch ubuntu debian macos
+
+# ── Detect missing tools ──
+TOOLS=(shellcheck shfmt)
+MISSING=()
+for cmd in "${TOOLS[@]}"; do
+    if has_cmd "$cmd"; then
+        log_success "$cmd already installed"
+    else
+        MISSING+=("$cmd")
+    fi
+done
+
+if [[ ${#MISSING[@]} -eq 0 ]]; then
+    log_success "All dev quality tools present — nothing to install."
+else
+    log_info "Installing missing tools: ${MISSING[*]}"
+    case "$SETUP_OS" in
+        arch)
+            pkg_install "${MISSING[@]}"
+            ;;
+        ubuntu | debian)
+            pkg_install "${MISSING[@]}"
+            ;;
+        macos)
+            pkg_install "${MISSING[@]}"
+            ;;
+        *)
+            log_error "Unsupported OS: $SETUP_OS"
+            exit 1
+            ;;
+    esac
+fi
+
+# ── Verify ──
+log_info "Verifying dev quality tools..."
+still_missing=()
+for cmd in "${TOOLS[@]}"; do
+    if has_cmd "$cmd"; then
+        log_success "$cmd ready"
+    else
+        log_error "$cmd not found after install"
+        still_missing+=("$cmd")
+    fi
+done
+
+if [[ ${#still_missing[@]} -gt 0 ]]; then
+    log_error "Missing tools after install: ${still_missing[*]}"
+    exit 1
+fi
+
+log_success "Dev quality tools ready."

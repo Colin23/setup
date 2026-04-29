@@ -1,0 +1,118 @@
+#!/usr/bin/env bash
+set -euo pipefail
+# 30-git-ssh — Git and SSH setup
+#
+# Installs: git, openssh
+# Configures: SSH key generation (if missing), basic git config prompts
+# Verify:   git --version, ssh -V, SSH key exists
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1091
+source "$SCRIPT_DIR/../lib/common"
+
+module_header "30-git-ssh" "Git and SSH: install, configure, key generation"
+
+require_os arch ubuntu debian macos
+
+# ── Install ──
+log_info "Installing git and openssh..."
+case "$SETUP_OS" in
+    arch)
+        pkg_install git openssh
+        ;;
+    ubuntu | debian)
+        pkg_install git openssh-client
+        ;;
+    macos)
+        pkg_install git openssh
+        ;;
+esac
+
+# ── SSH key generation (idempotent) ──
+SSH_KEY_PATH="$HOME/.ssh/id_ed25519"
+
+if [[ -f "$SSH_KEY_PATH" ]]; then
+    log_info "SSH key already exists: $SSH_KEY_PATH"
+else
+    if [[ -t 0 ]]; then
+        log_info "Generating SSH key..."
+        run_cmd mkdir -p "$HOME/.ssh"
+        run_cmd chmod 700 "$HOME/.ssh"
+
+        # Prompt for email
+        read -rp "Enter email for SSH key (or press Enter to skip): " ssh_email
+        if [[ -n "$ssh_email" ]]; then
+            run_cmd ssh-keygen -t ed25519 -C "$ssh_email" -f "$SSH_KEY_PATH" -N ""
+            log_success "SSH key generated: $SSH_KEY_PATH"
+
+            echo ""
+            log_info "────────────────────────────────────────"
+            log_info "Add this public key to your Git provider:"
+            echo ""
+            cat "${SSH_KEY_PATH}.pub"
+            echo ""
+            log_info "────────────────────────────────────────"
+            read -rp "Press Enter once you've added the key..."
+        else
+            log_warn "Skipping SSH key generation (no email provided)"
+        fi
+    else
+        log_warn "Non-interactive shell — skipping SSH key generation (run interactively to set up)"
+    fi
+fi
+
+# ── SSH agent ──
+if [[ -f "$SSH_KEY_PATH" ]]; then
+    log_info "Ensuring SSH key is added to agent..."
+    if [[ -z "${SSH_AUTH_SOCK:-}" ]] || ! ssh-add -l &>/dev/null; then
+        eval "$(ssh-agent -s)" &>/dev/null || true
+    fi
+    run_cmd ssh-add "$SSH_KEY_PATH" 2>/dev/null || log_warn "Could not add key to agent"
+fi
+
+# ── Git config (only set if not already configured) ──
+if [[ -z "$(git config --global user.name 2>/dev/null || true)" ]]; then
+    if [[ -t 0 ]]; then
+        read -rp "Enter git user.name (or press Enter to skip): " git_name
+        if [[ -n "$git_name" ]]; then
+            run_cmd git config --global user.name "$git_name"
+        fi
+    else
+        log_warn "Non-interactive shell — skipping git user.name prompt"
+    fi
+else
+    log_info "git user.name is already set"
+fi
+
+if [[ -z "$(git config --global user.email 2>/dev/null || true)" ]]; then
+    if [[ -t 0 ]]; then
+        read -rp "Enter git user.email (or press Enter to skip): " git_email
+        if [[ -n "$git_email" ]]; then
+            run_cmd git config --global user.email "$git_email"
+        fi
+    else
+        log_warn "Non-interactive shell — skipping git user.email prompt"
+    fi
+else
+    log_info "git user.email already set"
+fi
+
+# ── Verify ──
+log_info "Verifying git and SSH..."
+if has_cmd git; then
+    log_success "git: $(git --version)"
+else
+    log_error "git not found"
+fi
+
+if has_cmd ssh; then
+    log_success "ssh: $(ssh -V 2>&1)"
+else
+    log_error "ssh not found"
+fi
+
+if [[ -f "$SSH_KEY_PATH" ]]; then
+    log_success "SSH key exists: $SSH_KEY_PATH"
+else
+    log_warn "No SSH key at $SSH_KEY_PATH"
+fi

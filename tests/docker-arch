@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -euo pipefail
+# tests/docker-arch — Arch Linux Docker smoke tests
+#
+# Tests: fresh install, idempotency, drift recovery
+# Usage: ./tests/docker-arch
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+IMAGE="archlinux:latest"
+SKIP="firewall,browser"
+RUN_CMD="./run --skip $SKIP"
+
+log() { echo -e "\n\033[1m── $1 ──\033[0m"; }
+
+log "Arch Docker Smoke Tests"
+
+# ── Test 1: Fresh install ──
+log "Test 1: Fresh install"
+docker run --rm -v "$PROJECT_DIR":/setup:ro "$IMAGE" bash -c \
+    "pacman -Sy --noconfirm sudo && cp -r /setup /tmp/setup && cd /tmp/setup && $RUN_CMD"
+
+# ── Test 2: Idempotency ──
+log "Test 2: Idempotency (back-to-back run)"
+docker run --rm -v "$PROJECT_DIR":/setup:ro "$IMAGE" bash -c \
+    "pacman -Sy --noconfirm sudo && cp -r /setup /tmp/setup && cd /tmp/setup && \
+     $RUN_CMD && \
+     echo '── IDEMPOTENCY RUN ──' && \
+     $RUN_CMD"
+
+# ── Test 3: Drift recovery ──
+log "Test 3: Drift recovery (remove bat, rerun)"
+docker run --rm -v "$PROJECT_DIR":/setup:ro "$IMAGE" bash -c \
+    "pacman -Sy --noconfirm sudo && cp -r /setup /tmp/setup && cd /tmp/setup && \
+     $RUN_CMD && \
+     echo '── REMOVING bat TO SIMULATE DRIFT ──' && \
+     sudo pacman -Rns --noconfirm bat && \
+     echo '── DRIFT RECOVERY RUN ──' && \
+     $RUN_CMD"
+
+log "All Arch Docker tests passed ✓"

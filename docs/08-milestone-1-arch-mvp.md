@@ -16,8 +16,8 @@ Deliver a rerunnable, idempotent-ish setup system for Arch-based systems with sa
 
 ### 1) Runner
 
-- [ ] Deterministic module execution (`runs/NN-name.sh` sorted)
-- [ ] Flags: `--dry-run`, `--profile`, `--only`, `--skip`
+- [ ] Deterministic module execution (`runs/NN-name` sorted)
+- [ ] Flags: `--dry-run`, `--only`, `--skip`
 - [ ] Clear summary: succeeded/failed/skipped modules
 - [ ] Exit non-zero if any module fails
 
@@ -49,13 +49,7 @@ Deliver a rerunnable, idempotent-ish setup system for Arch-based systems with sa
 - [ ] 90-dev-quality (shellcheck, shfmt, bats)
 - [ ] 99-manual
 
-### 5) Profiles
-
-- [ ] `minimal`
-- [ ] `laptop`
-- [ ] `full`
-
-### 6) Testing
+### 5) Testing
 
 - [ ] ShellCheck + shfmt configured
 - [ ] At least one smoke test path in disposable environment

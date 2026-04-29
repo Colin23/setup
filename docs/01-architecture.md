@@ -15,7 +15,7 @@
 - `bootstrap/` -> first-run onboarding scripts (SSH, identity, dotfiles)
 - `run` -> main entrypoint
 - `lib/` -> common functions
-- `runs/` -> modules (`NN-name.sh`)
+- `runs/` -> modules (`NN-name`)
 - `profiles/` -> module selection sets
 - `docs/` -> design + plan
 - `tests/` -> smoke/integration tests

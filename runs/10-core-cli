@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+set -euo pipefail
+# 10-core-cli — Core CLI tools
+#
+# Installs: wget, tree, cloc, htop, vim, fastfetch, bat, fzf, eza
+# Verify:   <tool> --version for each
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1091
+source "$SCRIPT_DIR/../lib/common"
+
+module_header "10-core-cli" "Core CLI tools: wget, tree, cloc, htop, vim, fastfetch, bat, fzf, eza"
+
+require_os arch ubuntu debian macos
+
+# ── Arch ──
+if [[ "$SETUP_OS" == "arch" ]]; then
+    pkg_install wget tree cloc htop vim fastfetch bat fzf eza
+fi
+
+# ── Ubuntu/Debian ──
+if [[ "$SETUP_OS" == "ubuntu" || "$SETUP_OS" == "debian" ]]; then
+    pkg_install wget tree cloc htop vim fzf
+
+    # bat is packaged as 'batcat' on Ubuntu/Debian
+    if ! has_cmd bat && ! has_cmd batcat; then
+        pkg_install bat || pkg_install batcat || log_warn "bat/batcat not available via apt"
+    fi
+
+    # fastfetch is not in default Ubuntu repos
+    if ! has_cmd fastfetch; then
+        log_warn "fastfetch not in default apt repos — install via PPA or manually"
+    fi
+
+    # eza may not be in default repos on older Ubuntu
+    if ! has_cmd eza; then
+        log_warn "eza not available via apt — install manually or via cargo"
+    fi
+fi
+
+# ── macOS ──
+if [[ "$SETUP_OS" == "macos" ]]; then
+    pkg_install wget tree cloc htop vim fastfetch bat fzf eza
+fi
+
+# ── Verify ──
+log_info "Verifying core CLI tools..."
+for cmd in wget tree cloc htop vim fastfetch bat fzf eza; do
+    # On Ubuntu/Debian, bat may be installed as batcat
+    if [[ "$cmd" == "bat" ]] && ! has_cmd bat && has_cmd batcat; then
+        log_success "bat found (as batcat)"
+    elif has_cmd "$cmd"; then
+        log_success "$cmd found"
+    else
+        log_warn "$cmd not found"
+    fi
+done

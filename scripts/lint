@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+set -euo pipefail
+# scripts/lint — Static analysis: shellcheck + shfmt
+#
+# Requires: shellcheck, shfmt (run ./run --only dev-quality to install)
+# Usage:    ./scripts/lint          # check only
+#           ./scripts/lint --fix    # auto-format with shfmt, then check
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+FIX=0
+if [[ "${1:-}" == "--fix" ]]; then
+    FIX=1
+fi
+
+log() { echo -e "\n\033[1m── $1 ──\033[0m"; }
+
+# ── Require tools ──
+MISSING=()
+command -v shellcheck &>/dev/null || MISSING+=(shellcheck)
+command -v shfmt &>/dev/null || MISSING+=(shfmt)
+
+if [[ ${#MISSING[@]} -gt 0 ]]; then
+    echo "ERROR: Missing required tools: ${MISSING[*]}"
+    echo ""
+    echo "Run ./run --only dev-quality to install them."
+    exit 1
+fi
+
+# Gather all shell scripts by shebang or known paths
+mapfile -t SCRIPTS < <(find "$PROJECT_DIR" -type f \
+    \( -path "*/runs/*" -o -path "*/lib/*" -o -path "*/tests/*" -o -path "*/scripts/*" -o -name "run" \) \
+    ! -path "*/archive/*" ! -path "*/.git/*" ! -path "*/.oh-my-zsh/*" | sort)
+
+# Filter to only files with a shell shebang
+SHELL_SCRIPTS=()
+for f in "${SCRIPTS[@]}"; do
+    if head -1 "$f" | grep -qE "^#!.*(bash|sh)"; then
+        SHELL_SCRIPTS+=("$f")
+    fi
+done
+
+if [[ ${#SHELL_SCRIPTS[@]} -eq 0 ]]; then
+    echo "No shell scripts found."
+    exit 0
+fi
+
+ERRORS=0
+
+# ── shfmt (fix or check) ──
+if [[ $FIX -eq 1 ]]; then
+    log "shfmt (auto-fix mode)"
+    for f in "${SHELL_SCRIPTS[@]}"; do
+        if shfmt -d -i 4 -ci "$f" >/dev/null 2>&1; then
+            echo "  ✓ $f (already formatted)"
+        else
+            shfmt -w -i 4 -ci "$f"
+            echo "  ✎ $f (formatted)"
+        fi
+    done
+else
+    log "shfmt (check mode — use --fix to auto-format)"
+    for f in "${SHELL_SCRIPTS[@]}"; do
+        if shfmt -d -i 4 -ci "$f" >/dev/null 2>&1; then
+            echo "  ✓ $f"
+        else
+            echo "  ✗ $f"
+            shfmt -d -i 4 -ci "$f" || true
+            ERRORS=$((ERRORS + 1))
+        fi
+    done
+fi
+
+# ── ShellCheck ──
+log "ShellCheck"
+for f in "${SHELL_SCRIPTS[@]}"; do
+    if shellcheck -x "$f"; then
+        echo "  ✓ $f"
+    else
+        echo "  ✗ $f"
+        ERRORS=$((ERRORS + 1))
+    fi
+done
+
+if [[ $ERRORS -gt 0 ]]; then
+    echo ""
+    echo "✗ $ERRORS issue(s) found"
+    exit 1
+fi
+
+log "All lint checks passed ✓"
