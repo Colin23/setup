@@ -203,22 +203,26 @@ resolve_path() {
 ensure_symlink() {
     local source="$1"
     local link="$2"
+    local resolved_link resolved_source
 
     if [[ ! -e "$source" ]]; then
         log_error "ensure_symlink: source does not exist: $source"
         return 1
     fi
 
-    # Already correct
-    if [[ -L "$link" ]]; then
-        local resolved_link resolved_source
-        resolved_link="$(resolve_path "$link" 2>/dev/null || true)"
-        resolved_source="$(resolve_path "$source" 2>/dev/null || true)"
+    resolved_source="$(resolve_path "$source" 2>/dev/null || true)"
+    resolved_link="$(resolve_path "$link" 2>/dev/null || true)"
 
-        if [[ -n "$resolved_link" && -n "$resolved_source" && "$resolved_link" == "$resolved_source" ]]; then
-            log_info "symlink already correct: $link -> $source"
-            return 0
-        fi
+    # Same raw path or same canonical path: treat as already correct.
+    if [[ "$source" == "$link" ]] || [[ -n "$resolved_link" && -n "$resolved_source" && "$resolved_link" == "$resolved_source" ]]; then
+        log_info "symlink already correct: $link -> $source"
+        return 0
+    fi
+
+    # Already correct symlink
+    if [[ -L "$link" && -n "$resolved_link" && -n "$resolved_source" && "$resolved_link" == "$resolved_source" ]]; then
+        log_info "symlink already correct: $link -> $source"
+        return 0
     fi
 
     # Backup existing file/dir/symlink
