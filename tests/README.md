@@ -14,43 +14,48 @@ Smoke tests for the setup system. Run from project root.
 ./tests/docker-ubuntu
 ```
 
-## What can't be tested in Docker
+## Modules Skipped in Docker Tests
 
-| Module      | Why                            | Test method        |
-|-------------|--------------------------------|--------------------|
-| 30-git-ssh  | Interactive prompts, SSH agent | Real machine       |
-| 40-firewall | Requires systemd + iptables    | VM or real machine |
-| 50-browser  | GUI application                | Real machine       |
-| 80-dotfiles | Requires private repo access   | Real machine       |
-| 99-manual   | Print-only, no assertions      | Visual review      |
+| Module        | Why                            | How to test          |
+|---------------|--------------------------------|----------------------|
+| `30-git-ssh`  | Interactive prompts, SSH agent | Real machine         |
+| `40-firewall` | Requires systemd + iptables    | VM or real machine   |
+| `50-browser`  | GUI application                | Real machine         |
+| `80-dotfiles` | Skipped by Docker smoke tests  | Real machine (or VM) |
+
+`80-dotfiles` is currently skipped in Docker smoke tests (`tests/docker-arch` and
+`tests/docker-ubuntu` via `--skip git-ssh,dotfiles,firewall,browser`).
+`99-manual` remains safe in Docker because it only prints text.
+
+## Testing dotfiles on your current machine
+
+The dotfiles module is safe to run on an existing machine thanks to `ensure_symlink`'s
+backup behavior. Preview with dry-run first:
+
+```bash
+./run --only dotfiles --dry-run # Preview what would happen
+```
+
+```bash
+./run --only dotfiles # Apply (backs up existing files)
+```
+
+## Full bootstrap test
+
+To test the complete fresh-machine flow, use a VM:
+
+1. Create an Arch VM (GNOME Boxes or virt-manager)
+2. Snapshot immediately after clean OS install
+3. Follow [new-machine-setup.md](../docs/new-machine-setup.md) step by step
+4. Revert to snapshot and repeat to validate
 
 ## macOS
 
-No macOS Docker image exists (Apple licensing). Test on real hardware or a macOS CI runner (e.g., GitHub Actions
-`macos-latest`).
+No macOS Docker image exists (Apple licensing). Test on real hardware or a macOS CI runner
+(e.g., GitHub Actions `macos-latest`).
 
-**Key design decisions:**
+## Design decisions
 
 - The repo is mounted **read-only** (`:ro`) and copied inside the container, so tests never mutate the working tree
 - Each test is self-contained — a single `docker run` per scenario
 - Drift test removes `bat` specifically because it is a leaf package with no dependents
-
----
-
-## 2. The skipped modules
-
-Looking at the five skipped modules, here's the reality:
-
-| Module          | Docker-testable? | Why not                                                                |
-|-----------------|------------------|------------------------------------------------------------------------|
-| **30-git-ssh**  | Partially        | `read -rp` prompts block non-interactive; SSH agent needs running sshd |
-| **40-firewall** | ❌                | Needs systemd + kernel iptables — Docker can't do either               |
-| **50-browser**  | ❌                | GUI package, no display server in container                            |
-| **80-dotfiles** | Partially        | Only if `DOTFILES_REPO` is set; currently exits 0 when unset           |
-| **99-manual**   | ✅                | Pure print output, always safe                                         |
-
-`80-dotfiles` and `99-manual` are already safe — `80-dotfiles` exits cleanly when `DOTFILES_REPO` is empty, and
-`99-manual` just prints text. Both should be **removed from the skip list** in the Docker tests.
-
-For `30-git-ssh`, we can test the non-interactive parts (package install + verify) by making the interactive prompts
-skip gracefully when stdin isn't a terminal:

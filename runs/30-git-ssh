@@ -3,18 +3,24 @@ set -euo pipefail
 # 30-git-ssh — Git and SSH setup
 #
 # Installs: git, openssh
-# Configures: SSH key generation (if missing), basic git config prompts
+# Configures: SSH key generation (personal GitHub key, if missing)
+# Tests: SSH connectivity to GitHub
 # Verify:   git --version, ssh -V, SSH key exists
+#
+# Note: This module generates only the personal SSH key.
+# Work-specific keys are employer-dependent and managed separately.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
 source "$SCRIPT_DIR/../lib/common"
 
-module_header "30-git-ssh" "Git and SSH: install, configure, key generation"
+module_header "30-git-ssh" "Git and SSH: install, configure, personal key generation"
 
 require_os arch ubuntu debian macos
 
-# ── Install ──
+# ──────────────────────────────────────────────
+# Install
+# ──────────────────────────────────────────────
 log_info "Installing git and openssh..."
 case "$SETUP_OS" in
     arch)
@@ -28,31 +34,39 @@ case "$SETUP_OS" in
         ;;
 esac
 
-# ── SSH key generation (idempotent) ──
-SSH_KEY_PATH="$HOME/.ssh/id_ed25519"
+# ──────────────────────────────────────────────
+# SSH key generation (personal GitHub key, idempotent)
+# ──────────────────────────────────────────────
+SSH_KEY_NAME="personal-github-key"
+SSH_KEY_PATH="$HOME/.ssh/$SSH_KEY_NAME"
 
 if [[ -f "$SSH_KEY_PATH" ]]; then
     log_info "SSH key already exists: $SSH_KEY_PATH"
 else
-    if [[ -t 0 ]]; then
-        log_info "Generating SSH key..."
+    if [[ "${DRY_RUN:-}" == "true" ]]; then
+        log_info "DRY_RUN: would generate personal SSH key at $SSH_KEY_PATH"
+        log_info "DRY_RUN: would prompt for SSH key email and GitHub confirmation"
+        log_info "DRY_RUN: would print public key from ${SSH_KEY_PATH}.pub"
+    elif [[ -t 0 ]]; then
+        log_info "Generating personal SSH key ($SSH_KEY_NAME)..."
         run_cmd mkdir -p "$HOME/.ssh"
         run_cmd chmod 700 "$HOME/.ssh"
 
-        # Prompt for email
         read -rp "Enter email for SSH key (or press Enter to skip): " ssh_email
         if [[ -n "$ssh_email" ]]; then
             run_cmd ssh-keygen -t ed25519 -C "$ssh_email" -f "$SSH_KEY_PATH" -N ""
             log_success "SSH key generated: $SSH_KEY_PATH"
 
             echo ""
-            log_info "────────────────────────────────────────"
-            log_info "Add this public key to your Git provider:"
+            log_info "════════════════════════════════════════════════════════════"
+            log_info "Add this public key to GitHub:"
+            log_info "  → https://github.com/settings/ssh/new"
+            log_info "  → Title suggestion: personal-github-key"
             echo ""
             cat "${SSH_KEY_PATH}.pub"
             echo ""
-            log_info "────────────────────────────────────────"
-            read -rp "Press Enter once you've added the key..."
+            log_info "════════════════════════════════════════════════════════════"
+            read -rp "Press Enter once you've added the key to GitHub..."
         else
             log_warn "Skipping SSH key generation (no email provided)"
         fi
@@ -61,43 +75,62 @@ else
     fi
 fi
 
-# ── SSH agent ──
+# ──────────────────────────────────────────────
+# SSH agent
+# ──────────────────────────────────────────────
 if [[ -f "$SSH_KEY_PATH" ]]; then
     log_info "Ensuring SSH key is added to agent..."
-    if [[ -z "${SSH_AUTH_SOCK:-}" ]] || ! ssh-add -l &>/dev/null; then
-        eval "$(ssh-agent -s)" &>/dev/null || true
+    if [[ "${DRY_RUN:-}" == "true" ]]; then
+        log_info "DRY_RUN: would check ssh-agent state and add key: $SSH_KEY_PATH"
+    else
+        if [[ -z "${SSH_AUTH_SOCK:-}" ]] || ! ssh-add -l &>/dev/null; then
+            eval "$(ssh-agent -s)" &>/dev/null || true
+        fi
+        run_cmd ssh-add "$SSH_KEY_PATH" 2>/dev/null || log_warn "Could not add key to agent"
     fi
-    run_cmd ssh-add "$SSH_KEY_PATH" 2>/dev/null || log_warn "Could not add key to agent"
 fi
 
-# ── Git config (only set if not already configured) ──
-if [[ -z "$(git config --global user.name 2>/dev/null || true)" ]]; then
-    if [[ -t 0 ]]; then
-        read -rp "Enter git user.name (or press Enter to skip): " git_name
-        if [[ -n "$git_name" ]]; then
-            run_cmd git config --global user.name "$git_name"
-        fi
+# ──────────────────────────────────────────────
+# SSH connectivity test
+# ──────────────────────────────────────────────
+log_info "Testing SSH connectivity to GitHub..."
+if [[ "${DRY_RUN:-}" == "true" ]]; then
+    log_info "DRY_RUN: would run SSH connectivity test: ssh -T git@github.com"
+    if [[ -f "${SSH_KEY_PATH}.pub" ]]; then
+        log_info "DRY_RUN: would print public key from ${SSH_KEY_PATH}.pub for GitHub registration"
     else
-        log_warn "Non-interactive shell — skipping git user.name prompt"
+        log_warn "DRY_RUN: public key not present yet at ${SSH_KEY_PATH}.pub"
     fi
 else
-    log_info "git user.name is already set"
-fi
+    ssh_output="$(ssh -T git@github.com 2>&1 || true)"
 
-if [[ -z "$(git config --global user.email 2>/dev/null || true)" ]]; then
-    if [[ -t 0 ]]; then
-        read -rp "Enter git user.email (or press Enter to skip): " git_email
-        if [[ -n "$git_email" ]]; then
-            run_cmd git config --global user.email "$git_email"
-        fi
+    if echo "$ssh_output" | grep -qi "successfully authenticated"; then
+        log_success "SSH authentication to GitHub working"
     else
-        log_warn "Non-interactive shell — skipping git user.email prompt"
+        log_warn "SSH authentication to GitHub failed — key may not be registered yet"
+        log_info "Add your key at: https://github.com/settings/ssh/new"
+        if [[ -f "${SSH_KEY_PATH}.pub" ]]; then
+            log_info "Public key: $(cat "${SSH_KEY_PATH}.pub")"
+        fi
     fi
-else
-    log_info "git user.email already set"
 fi
 
-# ── Verify ──
+# ──────────────────────────────────────────────
+# Git config — skip global user.name/email setup
+# ──────────────────────────────────────────────
+# Global user.name and user.email are NOT set here.
+# Instead, .gitconfig uses includeIf to select identity based on directory.
+# The .gitconfig file and per-directory identity configs are managed by
+# the 80-dotfiles module.
+#
+# If dotfiles haven't been applied yet, git will work but commits
+# won't have identity set until 80-dotfiles runs.
+log_info "Git identity is managed via dotfiles (includeIf per directory)"
+log_info "Run './run --only dotfiles' after this module to apply git configs"
+
+# ──────────────────────────────────────────────
+# Verify
+# ──────────────────────────────────────────────
 log_info "Verifying git and SSH..."
 if has_cmd git; then
     log_success "git: $(git --version)"

@@ -6,6 +6,7 @@ set -euo pipefail
 # ──────────────────────────────────────────────
 # Usage:
 #   ./run                           # run all modules
+#   ./run --help                    # prints available flags
 #   ./run --dry-run                 # preview without executing
 #   ./run --only core-cli,shell     # run only matching modules
 #   ./run --skip browser,firewall   # skip matching modules

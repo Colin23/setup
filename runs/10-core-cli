@@ -2,20 +2,20 @@
 set -euo pipefail
 # 10-core-cli — Core CLI tools
 #
-# Installs: wget, tree, cloc, htop, vim, fastfetch, bat, fzf, eza
+# Installs: wget, tree, cloc, htop, vim, fastfetch, bat, fzf, eza, zoxide
 # Verify:   <tool> --version for each
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
 source "$SCRIPT_DIR/../lib/common"
 
-module_header "10-core-cli" "Core CLI tools: wget, tree, cloc, htop, vim, fastfetch, bat, fzf, eza"
+module_header "10-core-cli" "Core CLI tools: wget, tree, cloc, htop, vim, fastfetch, bat, fzf, eza, zoxide"
 
 require_os arch ubuntu debian macos
 
 # ── Arch ──
 if [[ "$SETUP_OS" == "arch" ]]; then
-    pkg_install wget tree cloc htop vim fastfetch bat fzf eza
+    pkg_install wget tree cloc htop vim fastfetch bat fzf eza zoxide
 fi
 
 # ── Ubuntu/Debian ──
@@ -36,16 +36,22 @@ if [[ "$SETUP_OS" == "ubuntu" || "$SETUP_OS" == "debian" ]]; then
     if ! has_cmd eza; then
         log_warn "eza not available via apt — install manually or via cargo"
     fi
+
+    # zoxide is not in default Ubuntu repos
+    if ! has_cmd zoxide; then
+        log_warn "zoxide not available via apt — install manually"
+    fi
 fi
 
 # ── macOS ──
 if [[ "$SETUP_OS" == "macos" ]]; then
-    pkg_install wget tree cloc htop vim fastfetch bat fzf eza
+    pkg_install wget tree cloc htop vim fastfetch bat fzf eza zoxide
 fi
 
 # ── Verify ──
 log_info "Verifying core CLI tools..."
-for cmd in wget tree cloc htop vim fastfetch bat fzf eza; do
+missing_tools=()
+for cmd in wget tree cloc htop vim fastfetch bat fzf eza zoxide; do
     # On Ubuntu/Debian, bat may be installed as batcat
     if [[ "$cmd" == "bat" ]] && ! has_cmd bat && has_cmd batcat; then
         log_success "bat found (as batcat)"
@@ -53,5 +59,11 @@ for cmd in wget tree cloc htop vim fastfetch bat fzf eza; do
         log_success "$cmd found"
     else
         log_warn "$cmd not found"
+        missing_tools+=("$cmd")
     fi
 done
+
+if [[ "$SETUP_OS" == "arch" || "$SETUP_OS" == "macos" ]] && [[ ${#missing_tools[@]} -gt 0 ]]; then
+    log_error "Missing tools after install: ${missing_tools[*]}"
+    exit 1
+fi

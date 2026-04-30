@@ -2,56 +2,153 @@
 set -euo pipefail
 # 80-dotfiles — Dotfiles integration
 #
-# Clones private dotfiles repo (if SSH is available) and symlinks configs.
-# Safe to rerun: checks existing state before acting.
+# Clones private dotfiles repo (requires SSH access to GitHub).
+# Creates development directory structure.
+# Symlinks config files to their correct locations.
 #
-# Convention:
-#   Dotfiles repo cloned to: $HOME/.dotfiles
-#   Symlinks managed from there into $HOME and $XDG_CONFIG_HOME
+# Safe to rerun: checks existing state before acting.
+# See docs/new-machine-setup.md for full details.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
 source "$SCRIPT_DIR/../lib/common"
 
-module_header "80-dotfiles" "Dotfiles: clone repo and symlink configs"
+module_header "80-dotfiles" "Dotfiles: clone repo, create dev dirs, symlink configs"
 
-# ── Configuration ──
-# TODO: Set private dotfiles repo URL here
-DOTFILES_REPO="${DOTFILES_REPO:-}"
+# ──────────────────────────────────────────────
+# Configuration
+# ──────────────────────────────────────────────
+DOTFILES_REPO="${DOTFILES_REPO:-git@github.com:Colin23/dotfiles.git}"
 DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
+DEV_DIR="$HOME/development"
 
-if [[ -z "$DOTFILES_REPO" ]]; then
-    log_warn "DOTFILES_REPO is not set. Skipping dotfiles setup."
-    log_info "Set DOTFILES_REPO env var or edit this script to enable."
-    log_info "Example: export DOTFILES_REPO=git@github.com:youruser/dotfiles.git"
+# ──────────────────────────────────────────────
+# SSH availability check
+# ──────────────────────────────────────────────
+log_info "Checking SSH access to GitHub..."
+ssh_output="$(ssh -T git@github.com 2>&1 || true)"
+
+if echo "$ssh_output" | grep -qi "successfully authenticated"; then
+    log_success "SSH authentication to GitHub confirmed"
+else
+    log_warn "SSH authentication to GitHub not available."
+    log_warn "ssh -T output: $ssh_output"
+    log_info "Run './run --only git-ssh' first to set up SSH keys."
+    log_info "Skipping dotfiles setup."
     exit 0
 fi
 
-# ── Clone or update ──
+# ──────────────────────────────────────────────
+# Clone or update dotfiles repo
+# ──────────────────────────────────────────────
 if [[ -d "$DOTFILES_DIR/.git" ]]; then
     existing_remote="$(git -C "$DOTFILES_DIR" remote get-url origin 2>/dev/null || echo "")"
     if [[ "$existing_remote" == "$DOTFILES_REPO" ]]; then
         log_info "Dotfiles repo already cloned at $DOTFILES_DIR, pulling latest..."
         run_cmd git -C "$DOTFILES_DIR" pull --ff-only
     else
-        log_error "Existing repo at $DOTFILES_DIR has a different remote: $existing_remote (expected: $DOTFILES_REPO)"
-        log_info "Removing mismatched repo and re-cloning..."
-        run_cmd rm -rf "$DOTFILES_DIR"
-        run_cmd git clone "$DOTFILES_REPO" "$DOTFILES_DIR"
+        log_error "Existing repo at $DOTFILES_DIR has different remote: $existing_remote"
+        log_error "Expected: $DOTFILES_REPO"
+        log_info "Remove $DOTFILES_DIR manually and rerun if you want to re-clone."
+        exit 1
     fi
+else
+    log_info "Cloning dotfiles repo to $DOTFILES_DIR..."
+    run_cmd git clone "$DOTFILES_REPO" "$DOTFILES_DIR"
 fi
 
-# ── Symlink management ──
-# Add your symlink mappings here as you build out your dotfiles repo.
-# Examples:
-#   ensure_symlink "$DOTFILES_DIR/.zshrc"        "$HOME/.zshrc"
-#   ensure_symlink "$DOTFILES_DIR/.config/starship.toml" "${XDG_CONFIG_HOME:-$HOME/.config}/starship.toml"
+# ──────────────────────────────────────────────
+# Create development directory structure
+# ──────────────────────────────────────────────
+# These directories are required for .gitconfig includeIf rules.
+# The git identity used for a repo depends on which directory it lives in.
+log_info "Ensuring development directory structure..."
 
-log_info "TODO: Add symlink mappings once dotfiles repo structure is finalized"
+DEV_DIRS=(
+    "$DEV_DIR/personal"
+    "$DEV_DIR/obsidian"
+    # ── Work directories (update when changing employers) ──
+    "$DEV_DIR/work/mbag/github"
+    "$DEV_DIR/work/mbag/gitlab"
+    "$DEV_DIR/work-ssc"
+)
 
-# ── Verify ──
+for dir in "${DEV_DIRS[@]}"; do
+    if [[ -d "$dir" ]]; then
+        log_info "directory exists: $dir"
+    else
+        run_cmd mkdir -p "$dir"
+        log_success "created: $dir"
+    fi
+done
+
+# ──────────────────────────────────────────────
+# Symlink mappings — personal baseline
+# ──────────────────────────────────────────────
+# Format: ensure_symlink <source in dotfiles> <target on machine>
+log_info "Symlinking personal baseline configs..."
+
+ensure_symlink "$DOTFILES_DIR/.zshrc" "$HOME/.zshrc"
+ensure_symlink "$DOTFILES_DIR/starship.toml" "${XDG_CONFIG_HOME:-$HOME/.config}/starship.toml"
+ensure_symlink "$DOTFILES_DIR/.gitconfig" "$HOME/.gitconfig"
+ensure_symlink "$DOTFILES_DIR/.gitignore" "$HOME/.gitignore"
+ensure_symlink "$DOTFILES_DIR/config" "$HOME/.ssh/config"
+ensure_symlink "$DOTFILES_DIR/.gitconfig-pers" "$DEV_DIR/personal/.gitconfig-pers"
+
+# ──────────────────────────────────────────────
+# Symlink mappings — work-specific
+# ──────────────────────────────────────────────
+# Update this section when changing employers.
+# Remove old entries, add new ones, rerun ./run.
+log_info "Symlinking work-specific configs..."
+
+ensure_symlink "$DOTFILES_DIR/.gitconfig-work-mbag-github" "$DEV_DIR/work/mbag/github/.gitconfig-work-mbag-github"
+ensure_symlink "$DOTFILES_DIR/.gitconfig-work-mbag-gitlab" "$DEV_DIR/work/mbag/gitlab/.gitconfig-work-mbag-gitlab"
+ensure_symlink "$DOTFILES_DIR/.gitconfig-work-ssc" "$DEV_DIR/work-ssc/.gitconfig-work-ssc"
+
+# ──────────────────────────────────────────────
+# Verify
+# ──────────────────────────────────────────────
+log_info "Verifying dotfiles setup..."
+
+errors=0
+
+# Verify repo
 if [[ -d "$DOTFILES_DIR/.git" ]]; then
     log_success "Dotfiles repo present at $DOTFILES_DIR"
 else
-    log_warn "Dotfiles repo not found"
+    log_error "Dotfiles repo not found at $DOTFILES_DIR"
+    errors=$((errors + 1))
 fi
+
+# Verify symlinks
+VERIFY_LINKS=(
+    "$HOME/.zshrc"
+    "${XDG_CONFIG_HOME:-$HOME/.config}/starship.toml"
+    "$HOME/.gitconfig"
+    "$HOME/.gitignore"
+    "$HOME/.ssh/config"
+    "$DEV_DIR/personal/.gitconfig-pers"
+    "$DEV_DIR/work/mbag/github/.gitconfig-work-mbag-github"
+    "$DEV_DIR/work/mbag/gitlab/.gitconfig-work-mbag-gitlab"
+    "$DEV_DIR/work-ssc/.gitconfig-work-ssc"
+)
+
+for link in "${VERIFY_LINKS[@]}"; do
+    if [[ -L "$link" ]]; then
+        log_success "symlink OK: $link"
+    elif [[ -e "$link" ]]; then
+        log_error "exists but not a symlink: $link"
+        errors=$((errors + 1))
+    else
+        log_error "missing: $link"
+        errors=$((errors + 1))
+    fi
+done
+
+if [[ $errors -gt 0 ]]; then
+    log_error "$errors dotfile issue(s) found"
+    exit 1
+fi
+
+log_success "Dotfiles setup complete."
