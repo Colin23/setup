@@ -9,7 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 IMAGE="ubuntu:24.04"
-SKIP="firewall,browser"
+SKIP="git-ssh,dotfiles,firewall,browser"
 RUN_CMD="./run --skip $SKIP"
 
 log() { echo -e "\n\033[1m── $1 ──\033[0m"; }

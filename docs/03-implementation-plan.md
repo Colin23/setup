@@ -84,7 +84,6 @@ Implement prioritized modules from inventory (Milestone 1 list), e.g.:
 ## Phase 4 — Test Harness & Safety
 
 - lint/format checks (ShellCheck, shfmt)
-- basic bats tests for helper behavior
 - smoke tests in disposable environment
 - idempotency test: run twice
 - drift correction test (remove tool, rerun)

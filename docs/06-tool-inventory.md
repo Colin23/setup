@@ -55,11 +55,11 @@ It answers:
 | fzf                     | cli ux         | 10-core-cli      | pacman      | apt                    | brew                  | `fzf --version`        | m1         |
 | starship                | shell prompt   | 20-shell         | pacman      | apt                    | brew                  | `starship --version`   | m1         |
 | eza                     | cli ux         | 10-core-cli      | pacman      | manual                 | brew                  | `eza --version`        | m1         |
+| zoxide                  | cli ux         | 10-core-cli      | pacman      | manual                 | brew                  | `zoxide --version`     | m1         |
 | ufw                     | firewall       | 40-firewall      | pacman      | apt                    | manual                | `ufw status`           | m1         |
 | carapace-bin            | cli completion | 20-shell         | aur         | manual                 | brew                  | `carapace --version`   | m1         |
 | zsh-autosuggestions     | shell plugin   | 20-shell         | oh-my-zsh   | oh-my-zsh              | oh-my-zsh             | plugin file exists     | m1         |
 | zsh-syntax-highlighting | shell plugin   | 20-shell         | oh-my-zsh   | oh-my-zsh              | oh-my-zsh             | plugin file exists     | m1         |
-| bats                    | testing        | 90-dev-quality   | pacman      | apt/manual             | brew                  | `bats -v`              | m1         |
 | shellcheck              | testing/lint   | 90-dev-quality   | pacman      | apt                    | brew                  | `shellcheck --version` | m1         |
 | shfmt                   | testing/lint   | 90-dev-quality   | pacman      | apt/manual             | brew                  | `shfmt --version`      | m1         |
 
@@ -102,44 +102,3 @@ It answers:
 | ventoy           | usb tooling | aur         | manual                 | manual                | binary exists             | later      |
 
 ---
-
-## Phase Targets
-
-## Milestone 1 (Arch MVP, automate now)
-
-- bash, zsh, git, openssh, curl
-- unzip, zip
-- bat, eza, fzf
-- nodejs, npm, uv, python
-- flatpak
-- bats, shellcheck, shfmt
-
-## Milestone 2 (next)
-
-- docker + compose
-- terraform/opentofu
-- azure-cli
-- php + composer
-- go
-- firewall + selected desktop apps
-
-## Later
-
-- VirtualBox stack
-- niche CLIs
-- additional runtimes and secondary apps
-
----
-
-## Rules for Adding New Tools
-
-When adding a tool:
-
-1. Add row here first.
-2. Choose tier + automation phase.
-3. Define verification command.
-4. Implement module logic.
-5. Add/update test assertion.
-6. Mark as automated once tested.
-
-This keeps repo truth and machine reconciliation aligned.

@@ -14,7 +14,6 @@
 
 - Shell linting (e.g., ShellCheck)
 - Formatting checks (e.g., shfmt)
-- Small helper function tests (Bats)
 
 ### 2) Integration (fast)
 

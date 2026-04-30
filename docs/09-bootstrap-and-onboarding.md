@@ -2,123 +2,185 @@
 
 ## Goal
 
-Define the first 30–60 minutes on a brand-new machine so setup is reliable, repeatable, and does not depend on
-pre-existing SSH credentials.
+Get from bare OS to fully provisioned developer environment with minimal manual steps.
+Total time: ~15–30 minutes, of which ~2 minutes is manual intervention.
 
 ---
 
-## High-Level Flow
+## Prerequisites
 
-1. Install minimal prerequisites manually (small fixed set).
-2. Clone public setup repo via HTTPS.
-3. Run bootstrap flow.
-4. Bootstrap establishes SSH identity and access.
-5. Pull private dotfiles repo.
-6. Run setup profiles/modules.
-7. Re-run to confirm idempotency.
+A freshly installed OS with:
+
+- A user account with `sudo` access
+- Network connectivity
 
 ---
 
-## Arch First-Time Onboarding
+## Step-by-Step Bootstrap Flow
 
-## Step 0 — Minimal manual prerequisites
+### Step 0 — Install minimal prerequisites (manual, ~30 seconds)
 
-Install only what is necessary to start automation:
+#### Arch
 
-- git
-- curl
-- openssh (if not already)
-- sudo configured for user
+```bash
+sudo pacman -Sy --noconfirm git curl openssh sudo
+```
 
-## Step 1 — Clone setup repo (HTTPS)
+#### Ubuntu
 
-Use HTTPS for first clone so it works before SSH keys exist.
+```bash
+sudo apt-get update && sudo apt-get install -y git curl openssh-client
+```
 
-## Step 2 — Start bootstrap
+### Step 1 — Clone setup repo via HTTPS (~30 seconds)
 
-Run bootstrap command from this repo (to be implemented under `bootstrap/`).
+HTTPS is used because SSH keys don't exist yet.
 
-Bootstrap responsibilities:
+```bash
+mkdir -p ~/development/personal/colin
+cd ~/development/personal/colin
+git clone https://github.com/Colin23/setup.git
+cd setup
+```
 
-- detect OS (Arch expected in v1)
-- verify network connectivity
-- ensure required base tools exist
-- generate SSH key if missing
-- print public key + guidance to add in GitHub/GitLab
-- wait/confirm user action
-- test SSH auth
-- optionally switch setup repo remote to SSH
+### Step 2 — Install base tools (automated, ~3–5 minutes)
 
-## Step 3 — Dotfiles acquisition
+Install system packages, CLI tools, shell, and dev quality tools.
+Dotfiles and git-ssh are skipped — they need SSH which isn't set up yet.
 
-After SSH is confirmed:
+```bash
+bash ./run --skip git-ssh,dotfiles,firewall,browser
+```
 
-- clone private dotfiles repo (recommended) OR
-- initialize/update private submodule
+This runs:
 
-Recommended approach: direct clone for simpler first-run auth handling.
+- `00-system-update` — system update + base packages
+- `10-core-cli` — wget, tree, bat, fzf, eza, zoxide, etc.
+- `20-shell` — zsh, starship, oh-my-zsh, plugins, carapace
+- `90-dev-quality` — shellcheck, shfmt
+- `99-manual` — prints manual step reminders
 
-## Step 4 — Apply setup profile
+### Step 3 — Set up SSH key (one manual pause, ~2 minutes)
 
-Run main setup, e.g. `minimal`, then `laptop/full`.
+```bash
+bash ./run --only git-ssh
+```
 
-## Step 5 — Validate convergence
+This will:
 
-Immediately run setup a second time:
+1. Install git + openssh (if not already present)
+2. Generate an `ed25519` SSH key (prompts for email)
+3. Print the public key
+4. **Pause** — you add the key to [GitHub SSH settings](https://github.com/settings/ssh/new)
+5. Test SSH connectivity to GitHub
+6. Report success/failure
 
-- should complete successfully
-- should not repeat destructive steps
-- should only reconcile drift/missing state
+**This is the only manual pause in the entire bootstrap.**
+
+### Step 4 — Clone dotfiles and apply configs (automated, ~1 minute)
+
+```bash
+bash ./run --only dotfiles
+```
+
+This will:
+
+1. Clone `git@github.com:Colin23/dotfiles.git` to `~/.dotfiles`
+2. Create `~/development/` directory tree (personal, work, obsidian)
+3. Symlink all configs (`.zshrc`, `starship.toml`, `.gitconfig`, git identities, SSH config)
+4. Verify all symlinks are correct
+
+### Step 5 — Full convergence run (automated, ~2 minutes)
+
+```bash
+bash ./run
+```
+
+Runs everything. All modules should succeed:
+
+- Already-installed packages → no-op
+- Already-correct symlinks → no-op
+- SSH key → already exists
+- Dotfiles → already cloned, pull is no-op
+
+### Step 6 — Idempotency verification
+
+```bash
+bash ./run
+```
+
+Run a second time. Should complete with zero changes and zero failures.
+
+### Step 7 — Start a new shell
+
+```bash
+exec zsh
+```
+
+Your full environment is now active: zsh + starship + plugins + your `.zshrc`.
 
 ---
 
-## Repository Strategy: Public Setup + Private Dotfiles
+## Summary of Manual Steps
 
-## Public repo
+| Step | Action                       | Time |
+|------|------------------------------|------|
+| 0    | Install git, curl, openssh   | 30s  |
+| 1    | Clone setup repo (HTTPS)     | 30s  |
+| 3    | Add SSH key to GitHub        | ~90s |
+| 7    | Start new shell (`exec zsh`) | 5s   |
 
-Contains:
-
-- runner
-- modules
-- docs
-- non-secret machine logic
-
-## Private dotfiles repo
-
-Contains:
-
-- personal shell/editor configs
-- private defaults
-- non-public preferences
-
-## Integration options
-
-1. **Preferred:** bootstrap clones private dotfiles repo after SSH setup.
-2. **Alternative:** git submodule (works, but first-run auth UX is slightly more complex).
+Everything else is automated.
 
 ---
 
-## Bootstrap Design Requirements
+## What Happens on Subsequent Runs
 
-- Must be safe to rerun.
-- Must not overwrite SSH keys blindly.
-- Must provide clear prompts for manual key registration.
-- Must fail fast with actionable errors.
-- Must log each step.
+After initial bootstrap, ongoing reconciliation is just:
+
+```bash
+cd ~/development/personal/colin/setup
+./run
+```
+
+This will:
+
+- Update system packages
+- Ensure all CLI tools are present (install if missing = drift recovery)
+- Pull latest dotfiles and re-verify symlinks
+- Report any issues
 
 ---
 
-## Safety Notes
+## Modules Skipped in Docker Tests
 
-- Never store secrets in this repository.
-- Keep secret material outside source control.
-- Dotfile application should use backup/replace policy (defined in implementation).
-- Manual steps should be explicit and isolated in a dedicated module.
+| Module        | Why                            | How to test        |
+|---------------|--------------------------------|--------------------|
+| `30-git-ssh`  | Interactive prompts, SSH agent | Real machine       |
+| `40-firewall` | Requires systemd + iptables    | VM or real machine |
+| `50-browser`  | GUI application                | Real machine       |
+
+`80-dotfiles` and `99-manual` are safe in Docker (dotfiles exits gracefully without SSH,
+manual just prints text).
 
 ---
 
-## Future Extensions
+## Repository Strategy
 
-- bootstrap `--non-interactive` mode (for CI/VM testing)
-- automatic detection of Git provider and key upload helpers
-- support for Ubuntu/macOS bootstrap variants
+| Repo       | Visibility | Contains                                           | Cloned to                            |
+|------------|------------|----------------------------------------------------|--------------------------------------|
+| `setup`    | Public     | Runner, modules, lib, docs, tests                  | `~/development/personal/colin/setup` |
+| `dotfiles` | Private    | `.zshrc`, `starship.toml`, git configs, SSH config | `~/.dotfiles`                        |
+
+See `docs/10-dotfiles-strategy.md` for full details on the two-repo architecture.
+
+---
+
+## Switching to SSH Remote (optional)
+
+After SSH is working, you can switch the setup repo from HTTPS to SSH:
+
+```bash
+cd ~/development/personal/colin/setup
+git remote set-url origin git@github.com:Colin23/setup.git
+```
