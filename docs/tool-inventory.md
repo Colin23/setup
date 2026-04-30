@@ -9,7 +9,6 @@ It answers:
 - What should exist on the machine
 - How each item is installed
 - How installation is verified
-- In which implementation phase each item will be automated
 
 ---
 
@@ -29,7 +28,7 @@ It answers:
 
 ### Core tools
 
-| tool                    | category       | module           | arch method | ubuntu method (future) | macos method (future) | verify                 |
+| tool                    | category       | module           | arch method | ubuntu method (future) | macOS method (future) | verify                 |
 |-------------------------|----------------|------------------|-------------|------------------------|-----------------------|------------------------|
 | bash                    | shell          | 00-system-update | pacman      | apt                    | system                | `bash --version`       |
 | openssh                 | vcs/auth       | 30-git-ssh       | pacman      | apt                    | system                | `ssh -V`               |
@@ -59,7 +58,7 @@ It answers:
 
 ### Extended tools
 
-| tool              | category          | arch method                      | ubuntu method (future) | macos method (future) | verify                                                                           |
+| tool              | category          | arch method                      | ubuntu method (future) | macOS method (future) | verify                                                                           |
 |-------------------|-------------------|----------------------------------|------------------------|-----------------------|----------------------------------------------------------------------------------|
 | Jetbrains Toolbox | IDEs              | manual                           | manual                 | manual                | app exists                                                                       |
 | asdf              | version manager   | aur                              | manual                 | brew                  | `asdf --version`                                                                 |
@@ -87,7 +86,7 @@ It answers:
 
 ### Optional tools
 
-| tool             | category    | arch method | ubuntu method (future) | macos method (future) | verify                    |
+| tool             | category    | arch method | ubuntu method (future) | macOS method (future) | verify                    |
 |------------------|-------------|-------------|------------------------|-----------------------|---------------------------|
 | azure-cli        | cloud       | pacman      | vendor-script          | brew                  | `az version`              |
 | argocd cli       | gitops      | pacman      | manual                 | brew                  | `argocd version --client` |

@@ -28,7 +28,7 @@ intervention.
 
 ## Repository structure
 
-```
+```text
 setup/
 ├── run                    main entrypoint
 ├── lib/common             shared helper library

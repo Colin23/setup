@@ -37,7 +37,7 @@ if [[ "$SETUP_OS" == "ubuntu" || "$SETUP_OS" == "debian" ]]; then
         log_warn "eza not available via apt — install manually or via cargo"
     fi
 
-    # zoxide
+    # zoxide is not in default Ubuntu repos
     if ! has_cmd zoxide; then
         log_warn "zoxide not available via apt — install manually"
     fi

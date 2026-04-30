@@ -21,7 +21,7 @@ Bash-first, minimal framework overhead, modular by concern, observable by defaul
 
 ### Directory layout
 
-```
+```text
 setup/
 ├── run main entrypoint
 ├── lib/common shared helper library
