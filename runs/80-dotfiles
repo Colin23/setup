@@ -7,7 +7,7 @@ set -euo pipefail
 # Symlinks config files to their correct locations.
 #
 # Safe to rerun: checks existing state before acting.
-# See docs/10-dotfiles-strategy.md for full details.
+# See docs/new-machine-setup.md for full details.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091

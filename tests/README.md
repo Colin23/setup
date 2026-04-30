@@ -46,7 +46,7 @@ To test the complete fresh-machine flow, use a VM:
 
 1. Create an Arch VM (GNOME Boxes or virt-manager)
 2. Snapshot immediately after clean OS install
-3. Follow `docs/09-bootstrap-and-onboarding.md` step by step
+3. Follow [new-machine-setup.md](../docs/new-machine-setup.md) step by step
 4. Revert to snapshot and repeat to validate
 
 ## macOS
