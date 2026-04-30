@@ -23,15 +23,15 @@ require_os arch ubuntu debian macos
 # ──────────────────────────────────────────────
 log_info "Installing git and openssh..."
 case "$SETUP_OS" in
-arch)
-    pkg_install git openssh
-    ;;
-ubuntu | debian)
-    pkg_install git openssh-client
-    ;;
-macos)
-    pkg_install git openssh
-    ;;
+    arch)
+        pkg_install git openssh
+        ;;
+    ubuntu | debian)
+        pkg_install git openssh-client
+        ;;
+    macos)
+        pkg_install git openssh
+        ;;
 esac
 
 # ──────────────────────────────────────────────
@@ -43,7 +43,11 @@ SSH_KEY_PATH="$HOME/.ssh/$SSH_KEY_NAME"
 if [[ -f "$SSH_KEY_PATH" ]]; then
     log_info "SSH key already exists: $SSH_KEY_PATH"
 else
-    if [[ -t 0 ]]; then
+    if [[ "${DRY_RUN:-}" == "true" ]]; then
+        log_info "DRY_RUN: would generate personal SSH key at $SSH_KEY_PATH"
+        log_info "DRY_RUN: would prompt for SSH key email and GitHub confirmation"
+        log_info "DRY_RUN: would print public key from ${SSH_KEY_PATH}.pub"
+    elif [[ -t 0 ]]; then
         log_info "Generating personal SSH key ($SSH_KEY_NAME)..."
         run_cmd mkdir -p "$HOME/.ssh"
         run_cmd chmod 700 "$HOME/.ssh"
@@ -76,25 +80,38 @@ fi
 # ──────────────────────────────────────────────
 if [[ -f "$SSH_KEY_PATH" ]]; then
     log_info "Ensuring SSH key is added to agent..."
-    if [[ -z "${SSH_AUTH_SOCK:-}" ]] || ! ssh-add -l &>/dev/null; then
-        eval "$(ssh-agent -s)" &>/dev/null || true
+    if [[ "${DRY_RUN:-}" == "true" ]]; then
+        log_info "DRY_RUN: would check ssh-agent state and add key: $SSH_KEY_PATH"
+    else
+        if [[ -z "${SSH_AUTH_SOCK:-}" ]] || ! ssh-add -l &>/dev/null; then
+            eval "$(ssh-agent -s)" &>/dev/null || true
+        fi
+        run_cmd ssh-add "$SSH_KEY_PATH" 2>/dev/null || log_warn "Could not add key to agent"
     fi
-    run_cmd ssh-add "$SSH_KEY_PATH" 2>/dev/null || log_warn "Could not add key to agent"
 fi
 
 # ──────────────────────────────────────────────
 # SSH connectivity test
 # ──────────────────────────────────────────────
 log_info "Testing SSH connectivity to GitHub..."
-ssh_output="$(ssh -T git@github.com 2>&1 || true)"
-
-if echo "$ssh_output" | grep -qi "successfully authenticated"; then
-    log_success "SSH authentication to GitHub working"
-else
-    log_warn "SSH authentication to GitHub failed — key may not be registered yet"
-    log_info "Add your key at: https://github.com/settings/ssh/new"
+if [[ "${DRY_RUN:-}" == "true" ]]; then
+    log_info "DRY_RUN: would run SSH connectivity test: ssh -T git@github.com"
     if [[ -f "${SSH_KEY_PATH}.pub" ]]; then
-        log_info "Public key: $(cat "${SSH_KEY_PATH}.pub")"
+        log_info "DRY_RUN: would print public key from ${SSH_KEY_PATH}.pub for GitHub registration"
+    else
+        log_warn "DRY_RUN: public key not present yet at ${SSH_KEY_PATH}.pub"
+    fi
+else
+    ssh_output="$(ssh -T git@github.com 2>&1 || true)"
+
+    if echo "$ssh_output" | grep -qi "successfully authenticated"; then
+        log_success "SSH authentication to GitHub working"
+    else
+        log_warn "SSH authentication to GitHub failed — key may not be registered yet"
+        log_info "Add your key at: https://github.com/settings/ssh/new"
+        if [[ -f "${SSH_KEY_PATH}.pub" ]]; then
+            log_info "Public key: $(cat "${SSH_KEY_PATH}.pub")"
+        fi
     fi
 fi
 

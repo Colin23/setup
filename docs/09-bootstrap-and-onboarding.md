@@ -154,14 +154,16 @@ This will:
 
 ## Modules Skipped in Docker Tests
 
-| Module        | Why                            | How to test        |
-|---------------|--------------------------------|--------------------|
-| `30-git-ssh`  | Interactive prompts, SSH agent | Real machine       |
-| `40-firewall` | Requires systemd + iptables    | VM or real machine |
-| `50-browser`  | GUI application                | Real machine       |
+| Module        | Why                            | How to test          |
+|---------------|--------------------------------|----------------------|
+| `30-git-ssh`  | Interactive prompts, SSH agent | Real machine         |
+| `40-firewall` | Requires systemd + iptables    | VM or real machine   |
+| `50-browser`  | GUI application                | Real machine         |
+| `80-dotfiles` | Skipped by Docker smoke tests  | Real machine (or VM) |
 
-`80-dotfiles` and `99-manual` are safe in Docker (dotfiles exits gracefully without SSH,
-manual just prints text).
+`80-dotfiles` is currently skipped in Docker smoke tests (`tests/docker-arch` and
+`tests/docker-ubuntu` via `--skip git-ssh,dotfiles,firewall,browser`).
+`99-manual` remains safe in Docker because it only prints text.
 
 ---
 

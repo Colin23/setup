@@ -39,7 +39,7 @@ if [[ "$SETUP_OS" == "ubuntu" || "$SETUP_OS" == "debian" ]]; then
 
     # zoxide
     if ! has_cmd zoxide; then
-        pkg_install zoxide || log_warn "zoxide not available via apt — install manually"
+        log_warn "zoxide not available via apt — install manually"
     fi
 fi
 

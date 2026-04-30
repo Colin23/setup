@@ -14,16 +14,18 @@ Smoke tests for the setup system. Run from project root.
 ./tests/docker-ubuntu
 ```
 
-## What can't be tested in Docker
+## Modules Skipped in Docker Tests
 
-| Module      | Why                                | Test method          |
-|-------------|------------------------------------|----------------------|
-| 30-git-ssh  | Interactive prompts, SSH to GitHub | Real machine         |
-| 40-firewall | Requires systemd + iptables        | VM or real machine   |
-| 50-browser  | GUI application                    | Real machine         |
-| 80-dotfiles | Requires SSH to clone private repo | Real machine (or VM) |
+| Module        | Why                            | How to test          |
+|---------------|--------------------------------|----------------------|
+| `30-git-ssh`  | Interactive prompts, SSH agent | Real machine         |
+| `40-firewall` | Requires systemd + iptables    | VM or real machine   |
+| `50-browser`  | GUI application                | Real machine         |
+| `80-dotfiles` | Skipped by Docker smoke tests  | Real machine (or VM) |
 
-`99-manual` is safe in Docker — it only prints text.
+`80-dotfiles` is currently skipped in Docker smoke tests (`tests/docker-arch` and
+`tests/docker-ubuntu` via `--skip git-ssh,dotfiles,firewall,browser`).
+`99-manual` remains safe in Docker because it only prints text.
 
 ## Testing dotfiles on your current machine
 

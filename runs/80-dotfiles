@@ -138,7 +138,8 @@ for link in "${VERIFY_LINKS[@]}"; do
     if [[ -L "$link" ]]; then
         log_success "symlink OK: $link"
     elif [[ -e "$link" ]]; then
-        log_warn "exists but not a symlink: $link"
+        log_error "exists but not a symlink: $link"
+        errors=$((errors + 1))
     else
         log_error "missing: $link"
         errors=$((errors + 1))
