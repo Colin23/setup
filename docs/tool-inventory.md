@@ -28,33 +28,33 @@ It answers:
 
 ### Core tools
 
-| tool                    | category       | module           | arch method | ubuntu method (future) | macOS method (future) | verify                 |
-|-------------------------|----------------|------------------|-------------|------------------------|-----------------------|------------------------|
-| bash                    | shell          | 00-system-update | pacman      | apt                    | system                | `bash --version`       |
-| openssh                 | vcs/auth       | 30-git-ssh       | pacman      | apt                    | system                | `ssh -V`               |
-| curl                    | network        | 00-system-update | pacman      | apt                    | brew/system           | `curl --version`       |
-| unzip                   | archive        | 00-system-update | pacman      | apt                    | brew/system           | `unzip -v`             |
-| zip                     | archive        | 00-system-update | pacman      | apt                    | brew/system           | `zip -v`               |
-| zsh                     | shell          | 20-shell         | pacman      | apt                    | brew                  | `zsh --version`        |
-| git                     | vcs            | 30-git-ssh       | pacman      | apt                    | brew                  | `git --version`        |
-| wget                    | network        | 10-core-cli      | pacman      | apt                    | brew                  | `wget --version`       |
-| tree                    | utility        | 10-core-cli      | pacman      | apt                    | brew                  | `tree --version`       |
-| cloc                    | utility        | 10-core-cli      | pacman      | apt                    | brew                  | `cloc --version`       |
-| htop                    | utility        | 10-core-cli      | pacman      | apt                    | brew                  | `htop --version`       |
-| vim                     | editor         | 10-core-cli      | pacman      | apt                    | brew                  | `vim --version`        |
-| firefox                 | browser        | 50-browser       | pacman      | apt                    | brew-cask             | `firefox --version`    |
-| fastfetch               | utility        | 10-core-cli      | pacman      | apt                    | brew                  | `fastfetch --version`  |
-| bat                     | cli ux         | 10-core-cli      | pacman      | apt                    | brew                  | `bat --version`        |
-| fzf                     | cli ux         | 10-core-cli      | pacman      | apt                    | brew                  | `fzf --version`        |
-| starship                | shell prompt   | 20-shell         | pacman      | apt                    | brew                  | `starship --version`   |
-| eza                     | cli ux         | 10-core-cli      | pacman      | manual                 | brew                  | `eza --version`        |
-| zoxide                  | cli ux         | 10-core-cli      | pacman      | manual                 | brew                  | `zoxide --version`     |
-| ufw                     | firewall       | 40-firewall      | pacman      | apt                    | manual                | `ufw status`           |
-| carapace-bin            | cli completion | 20-shell         | aur         | manual                 | brew                  | `carapace --version`   |
-| zsh-autosuggestions     | shell plugin   | 20-shell         | oh-my-zsh   | oh-my-zsh              | oh-my-zsh             | plugin file exists     |
-| zsh-syntax-highlighting | shell plugin   | 20-shell         | oh-my-zsh   | oh-my-zsh              | oh-my-zsh             | plugin file exists     |
-| shellcheck              | testing/lint   | 90-dev-quality   | pacman      | apt                    | brew                  | `shellcheck --version` |
-| shfmt                   | testing/lint   | 90-dev-quality   | pacman      | apt/manual             | brew                  | `shfmt --version`      |
+| tool                    | category       | module           | arch method | ubuntu method (future) | macOS method (future) | verify                                                                              |
+|-------------------------|----------------|------------------|-------------|------------------------|-----------------------|-------------------------------------------------------------------------------------|
+| bash                    | shell          | 00-system-update | pacman      | apt                    | system                | `bash --version`                                                                    |
+| openssh                 | vcs/auth       | 30-git-ssh       | pacman      | apt                    | system                | `ssh -V`                                                                            |
+| curl                    | network        | 00-system-update | pacman      | apt                    | brew/system           | `curl --version`                                                                    |
+| unzip                   | archive        | 00-system-update | pacman      | apt                    | brew/system           | `unzip -v`                                                                          |
+| zip                     | archive        | 00-system-update | pacman      | apt                    | brew/system           | `zip -v`                                                                            |
+| zsh                     | shell          | 20-shell         | pacman      | apt                    | brew                  | `zsh --version`                                                                     |
+| git                     | vcs            | 30-git-ssh       | pacman      | apt                    | brew                  | `git --version`                                                                     |
+| wget                    | network        | 10-core-cli      | pacman      | apt                    | brew                  | `wget --version`                                                                    |
+| tree                    | utility        | 10-core-cli      | pacman      | apt                    | brew                  | `tree --version`                                                                    |
+| cloc                    | utility        | 10-core-cli      | pacman      | apt                    | brew                  | `cloc --version`                                                                    |
+| htop                    | utility        | 10-core-cli      | pacman      | apt                    | brew                  | `htop --version`                                                                    |
+| vim                     | editor         | 10-core-cli      | pacman      | apt                    | brew                  | `vim --version`                                                                     |
+| firefox                 | browser        | 50-browser       | pacman      | apt                    | brew-cask             | `firefox --version`                                                                 |
+| fastfetch               | utility        | 10-core-cli      | pacman      | apt                    | brew                  | `fastfetch --version`                                                               |
+| bat                     | cli ux         | 10-core-cli      | pacman      | apt                    | brew                  | `bat --version`                                                                     |
+| fzf                     | cli ux         | 10-core-cli      | pacman      | apt                    | brew                  | `fzf --version`                                                                     |
+| starship                | shell prompt   | 20-shell         | pacman      | apt                    | brew                  | `starship --version`                                                                |
+| eza                     | cli ux         | 10-core-cli      | pacman      | manual                 | brew                  | `eza --version`                                                                     |
+| zoxide                  | cli ux         | 10-core-cli      | pacman      | manual                 | brew                  | `zoxide --version`                                                                  |
+| ufw                     | firewall       | 40-firewall      | pacman      | apt                    | manual                | `sudo ufw status verbose` shows active, deny (incoming), allow (outgoing), no rules |
+| carapace-bin            | cli completion | 20-shell         | aur         | manual                 | brew                  | `carapace --version`                                                                |
+| zsh-autosuggestions     | shell plugin   | 20-shell         | oh-my-zsh   | oh-my-zsh              | oh-my-zsh             | plugin file exists                                                                  |
+| zsh-syntax-highlighting | shell plugin   | 20-shell         | oh-my-zsh   | oh-my-zsh              | oh-my-zsh             | plugin file exists                                                                  |
+| shellcheck              | testing/lint   | 90-dev-quality   | pacman      | apt                    | brew                  | `shellcheck --version`                                                              |
+| shfmt                   | testing/lint   | 90-dev-quality   | pacman      | apt/manual             | brew                  | `shfmt --version`                                                                   |
 
 ### Extended tools
 

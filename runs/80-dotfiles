@@ -49,7 +49,7 @@ if [[ -d "$DOTFILES_DIR/.git" ]]; then
     else
         log_error "Existing repo at $DOTFILES_DIR has different remote: $existing_remote"
         log_error "Expected: $DOTFILES_REPO"
-        log_info "Remove $DOTFILES_DIR manually and rerun if you want to re-clone."
+        log_info "Remove $DOTFILES_DIR manually and rerun to re-clone."
         exit 1
     fi
 else
