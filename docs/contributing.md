@@ -155,12 +155,3 @@ runner (e.g., GitHub Actions `macos-latest`).
 - **Secondary:** Ubuntu / KDE Neon (works, but some tools are warn-only when not available
   via apt — for example fastfetch, eza, zoxide).
 - **Future:** macOS (planned, not implemented).
-
----
-
-## Backlog (post-Milestone 1)
-
-- CI pipeline (GitHub Actions: lint + Docker tests on push).
-- Hardening: retry logic for network-dependent installs.
-- Hardening: module timing summary.
-- Module-level dry-run (preview individual actions inside each module, not just runner-level).
