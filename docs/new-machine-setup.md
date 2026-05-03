@@ -103,7 +103,7 @@ Runs everything. All modules should succeed:
 - SSH key → already exists
 - Dotfiles → already cloned, pull is no-op
 
-On a managed/work laptop where you can't (or shouldn't) configure the system firewall:
+On a managed/work laptop where the firewall can't (or shouldn't) be configured:
 
 ```bash
 ./run --skip firewall
@@ -160,7 +160,7 @@ This will:
 
 ## Switching to SSH Remote (optional)
 
-After SSH is working, you can switch the setup repo from HTTPS to SSH:
+After SSH is working, switch the setup repo from HTTPS to SSH:
 
 ```bash
 cd ~/development/personal/colin/setup

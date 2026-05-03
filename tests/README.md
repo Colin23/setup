@@ -27,7 +27,7 @@ Smoke tests for the setup system. Run from project root.
 `tests/docker-ubuntu` via `--skip git-ssh,dotfiles,firewall,browser`).
 `99-manual` remains safe in Docker because it only prints text.
 
-## Testing dotfiles on your current machine
+## Testing dotfiles on the current machine
 
 The dotfiles module is safe to run on an existing machine thanks to `ensure_symlink`'s
 backup behavior. Preview with dry-run first:

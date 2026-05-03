@@ -23,7 +23,7 @@ echo "     → cat ~/.ssh/personal-github-key.pub"
 echo ""
 
 echo "  3. Import KeePassXC database"
-echo "     → Open KeePassXC and point to your database file"
+echo "     → Open KeePassXC and point to the database file"
 echo ""
 
 echo "  4. Log into Firefox / sync browser profile"
@@ -34,7 +34,7 @@ echo "     → Review and update runs/80-dotfiles"
 echo ""
 
 echo "  6. Set up Obsidian vault"
-echo "     → Point Obsidian to your vault location"
+echo "     → Point Obsidian to the vault location"
 echo ""
 
-log_info "All manual steps listed above. Complete them at your convenience."
+log_info "All manual steps listed above."

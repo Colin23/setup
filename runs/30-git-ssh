@@ -66,7 +66,7 @@ else
             cat "${SSH_KEY_PATH}.pub"
             echo ""
             log_info "════════════════════════════════════════════════════════════"
-            read -rp "Press Enter once you've added the key to GitHub..."
+            read -rp "Press Enter once the key is added to GitHub..."
         else
             log_warn "Skipping SSH key generation (no email provided)"
         fi
@@ -108,7 +108,7 @@ else
         log_success "SSH authentication to GitHub working"
     else
         log_warn "SSH authentication to GitHub failed — key may not be registered yet"
-        log_info "Add your key at: https://github.com/settings/ssh/new"
+        log_info "Add the key at: https://github.com/settings/ssh/new"
         if [[ -f "${SSH_KEY_PATH}.pub" ]]; then
             log_info "Public key: $(cat "${SSH_KEY_PATH}.pub")"
         fi
