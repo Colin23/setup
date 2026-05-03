@@ -6,6 +6,10 @@ is the single source of truth for desired machine state.
 Running `setup` is safe, repeatable, and convergent: each run brings the machine closer to the declared state, and a
 second run is a no-op.
 
+This module is intended to be run locally on the target machine. Running it over an active SSH session is unsupported:
+`ufw enable` with default-deny incoming can drop the session in edge cases where conntrack does not preserve the
+established connection.
+
 ---
 
 ## Quick Start
@@ -49,9 +53,9 @@ setup/
 
 ## Platform Support
 
-Primary: Arch-based Linux
-Secondary: Ubuntu / KDE Neon (some tools warn-only when not in apt)
-Future: macOS
+- Primary: Arch-based Linux
+- Secondary: Ubuntu / KDE Neon (some tools warn-only when not in apt)
+- Future: macOS
 
 ## Inspiration
 
