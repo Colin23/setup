@@ -1,3 +1,6 @@
+[![Lint](https://github.com/Colin23/setup/actions/workflows/lint.yml/badge.svg)](https://github.com/Colin23/setup/actions/workflows/lint.yml)
+[![Docker Tests](https://github.com/Colin23/setup/actions/workflows/docker-tests.yml/badge.svg)](https://github.com/Colin23/setup/actions/workflows/docker-tests.yml)
+
 # Setup
 
 A repo-driven machine setup system that bootstraps and continuously reconciles a developer environment. The repository
