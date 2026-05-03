@@ -63,7 +63,7 @@ This runs:
 ### Step 3 — Set up SSH key (one manual pause, ~2 minutes)
 
 ```bash
-bash ./run --only git-ssh
+./run --only git-ssh
 ```
 
 This will:
@@ -80,7 +80,7 @@ This will:
 ### Step 4 — Clone dotfiles and apply configs (automated, ~1 minute)
 
 ```bash
-bash ./run --only dotfiles
+./run --only dotfiles
 ```
 
 This will:
@@ -93,7 +93,7 @@ This will:
 ### Step 5 — Full convergence run (automated, ~2 minutes)
 
 ```bash
-bash ./run
+./run
 ```
 
 Runs everything. All modules should succeed:
@@ -112,7 +112,7 @@ On a managed/work laptop where you can't (or shouldn't) configure the system fir
 ### Step 6 — Idempotency verification
 
 ```bash
-bash ./run
+./run
 ```
 
 Run a second time. Should complete with zero changes and zero failures.

@@ -43,7 +43,7 @@ SSH_KEY_PATH="$HOME/.ssh/$SSH_KEY_NAME"
 if [[ -f "$SSH_KEY_PATH" ]]; then
     log_info "SSH key already exists: $SSH_KEY_PATH"
 else
-    if [[ "${DRY_RUN:-}" == "true" ]]; then
+    if [[ "${DRY_RUN:-0}" == "1" ]]; then
         log_info "DRY_RUN: would generate personal SSH key at $SSH_KEY_PATH"
         log_info "DRY_RUN: would prompt for SSH key email and GitHub confirmation"
         log_info "DRY_RUN: would print public key from ${SSH_KEY_PATH}.pub"
@@ -80,7 +80,7 @@ fi
 # ──────────────────────────────────────────────
 if [[ -f "$SSH_KEY_PATH" ]]; then
     log_info "Ensuring SSH key is added to agent..."
-    if [[ "${DRY_RUN:-}" == "true" ]]; then
+    if [[ "${DRY_RUN:-0}" == "1" ]]; then
         log_info "DRY_RUN: would check ssh-agent state and add key: $SSH_KEY_PATH"
     else
         if [[ -z "${SSH_AUTH_SOCK:-}" ]] || ! ssh-add -l &>/dev/null; then
@@ -94,7 +94,7 @@ fi
 # SSH connectivity test
 # ──────────────────────────────────────────────
 log_info "Testing SSH connectivity to GitHub..."
-if [[ "${DRY_RUN:-}" == "true" ]]; then
+if [[ "${DRY_RUN:-0}" == "1" ]]; then
     log_info "DRY_RUN: would run SSH connectivity test: ssh -T git@github.com"
     if [[ -f "${SSH_KEY_PATH}.pub" ]]; then
         log_info "DRY_RUN: would print public key from ${SSH_KEY_PATH}.pub for GitHub registration"
