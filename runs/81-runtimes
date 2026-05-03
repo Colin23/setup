@@ -1,0 +1,214 @@
+#!/usr/bin/env bash
+set -euo pipefail
+# 81-runtimes — asdf and language/runtime toolchains
+#
+# Installs: asdf, java, kotlin, gradle, maven, nodejs, dotnet, terraform, opentofu, golang, erlang, elixir, gleam
+# Source of truth: ~/.tool-versions (managed via dotfiles)
+# Verify:   asdf --version, java --version, kotlin -version, gradle --version, mvn --version,
+#           node --version, npm --version, dotnet --version, terraform --version, tofu --version, go version,
+#           erl -eval 'erlang:display(erlang:system_info(otp_release)), halt().' -noshell,
+#           elixir --version, gleam --version
+#
+# Notes:
+# - This module expects shell integration and ~/.tool-versions to be managed via dotfiles.
+# - Package-manager installs of asdf (for example via AUR or Homebrew) may provide `asdf`
+#   on PATH without a local ~/.asdf/asdf.sh file, so this module prefers PATH-first detection.
+# - Plugin updates are intentionally opt-in to keep normal runs more deterministic and faster.
+#   Use `ASDF_UPDATE_PLUGINS=1 ./run --only runtimes` when you explicitly want to refresh all plugins.
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1091
+source "$SCRIPT_DIR/../lib/common"
+
+module_header "81-runtimes" "Runtimes via asdf: JVM, Node, .NET, infra, Go, BEAM"
+
+require_os arch ubuntu debian macos
+
+ASDF_DATA_DIR="${ASDF_DATA_DIR:-$HOME/.asdf}"
+TOOL_VERSIONS_FILE="$HOME/.tool-versions"
+
+ASDF_PLUGINS=(
+    java
+    kotlin
+    gradle
+    maven
+    nodejs
+    dotnet
+    terraform
+    opentofu
+    golang
+    erlang
+    elixir
+    gleam
+)
+
+ensure_asdf_in_shell() {
+    if has_cmd asdf; then
+        return 0
+    fi
+
+    if [[ -f "$HOME/.asdf/asdf.sh" ]]; then
+        # shellcheck disable=SC1091
+        source "$HOME/.asdf/asdf.sh"
+    fi
+
+    if has_cmd brew; then
+        local brew_prefix
+        brew_prefix="$(brew --prefix asdf 2>/dev/null || true)"
+        if [[ -n "$brew_prefix" && -f "$brew_prefix/libexec/asdf.sh" ]]; then
+            # shellcheck disable=SC1091
+            source "$brew_prefix/libexec/asdf.sh"
+        fi
+    fi
+
+    if [[ -d "$ASDF_DATA_DIR/shims" ]]; then
+        export PATH="$ASDF_DATA_DIR/shims:$PATH"
+    fi
+
+    if has_cmd asdf; then
+        return 0
+    fi
+
+    log_error "asdf is not available in the current shell after installation"
+    log_info "Ensure your dotfiles configure asdf and then start a new shell if needed"
+    return 1
+}
+
+install_asdf() {
+    log_info "Installing asdf..."
+    case "$SETUP_OS" in
+        arch)
+            if has_cmd asdf; then
+                log_info "asdf already installed"
+            elif has_cmd paru || has_cmd yay; then
+                aur_install asdf-vm
+            else
+                log_warn "asdf: skipping install — no AUR helper available (install paru or yay first)"
+                return 1
+            fi
+            ;;
+        macos)
+            if has_cmd asdf; then
+                log_info "asdf already installed"
+            else
+                pkg_install asdf
+            fi
+            ;;
+        ubuntu | debian)
+            log_warn "asdf automation is not implemented yet on $SETUP_OS"
+            log_info "Install asdf manually/from source, then rerun './run --only runtimes'"
+            return 1
+            ;;
+    esac
+
+    ensure_asdf_in_shell
+}
+
+ensure_plugin() {
+    local plugin="$1"
+
+    if asdf plugin list | grep -Fxq "$plugin"; then
+        log_info "asdf plugin already added: $plugin"
+    else
+        run_cmd asdf plugin add "$plugin"
+        log_success "asdf plugin added: $plugin"
+    fi
+}
+
+install_runtime_versions() {
+    if [[ ! -f "$TOOL_VERSIONS_FILE" ]]; then
+        log_warn "No ~/.tool-versions found"
+        log_info "Add .tool-versions to your dotfiles repo and rerun './run --only runtimes'"
+        return 0
+    fi
+
+    if [[ "${ASDF_UPDATE_PLUGINS:-0}" == "1" ]]; then
+        log_info "Updating all asdf plugins..."
+        run_cmd asdf plugin update --all
+    fi
+
+    log_info "Installing runtimes from $TOOL_VERSIONS_FILE..."
+    run_cmd asdf install
+    run_cmd asdf reshim
+}
+
+verify_runtime() {
+    local name="$1"
+    shift
+
+    if "$@" >/dev/null 2>&1; then
+        log_success "$name ready"
+    else
+        log_error "$name verification failed"
+        return 1
+    fi
+}
+
+# ── Install OS prerequisites ──
+log_info "Installing runtime prerequisites..."
+case "$SETUP_OS" in
+    arch)
+        pkg_install git curl bash unzip zip tar gnupg
+        ;;
+    macos)
+        pkg_install coreutils git bash curl gpg
+        ;;
+    ubuntu | debian)
+        pkg_install git bash curl
+        ;;
+esac
+
+# ── Install asdf ──
+if ! install_asdf; then
+    if [[ "$SETUP_OS" == "ubuntu" || "$SETUP_OS" == "debian" ]]; then
+        exit 0
+    fi
+    exit 1
+fi
+
+# ── Add plugins ──
+log_info "Ensuring asdf plugins..."
+for plugin in "${ASDF_PLUGINS[@]}"; do
+    ensure_plugin "$plugin"
+done
+
+# ── Install versions from ~/.tool-versions ──
+install_runtime_versions
+
+# ── Verify ──
+log_info "Verifying asdf and runtimes..."
+
+verify_errors=0
+
+if has_cmd asdf; then
+    log_success "asdf: $(asdf --version 2>/dev/null || echo 'installed')"
+else
+    log_error "asdf not found"
+    verify_errors=$((verify_errors + 1))
+fi
+
+if [[ ! -f "$TOOL_VERSIONS_FILE" ]]; then
+    log_warn "Skipping runtime verification because ~/.tool-versions is not present"
+    exit 0
+fi
+
+verify_runtime "java" java --version || verify_errors=$((verify_errors + 1))
+verify_runtime "kotlin" kotlin -version || verify_errors=$((verify_errors + 1))
+verify_runtime "gradle" gradle --version || verify_errors=$((verify_errors + 1))
+verify_runtime "maven" mvn --version || verify_errors=$((verify_errors + 1))
+verify_runtime "nodejs" node --version || verify_errors=$((verify_errors + 1))
+verify_runtime "npm" npm --version || verify_errors=$((verify_errors + 1))
+verify_runtime "dotnet" dotnet --version || verify_errors=$((verify_errors + 1))
+verify_runtime "terraform" terraform --version || verify_errors=$((verify_errors + 1))
+verify_runtime "opentofu" tofu --version || verify_errors=$((verify_errors + 1))
+verify_runtime "golang" go version || verify_errors=$((verify_errors + 1))
+verify_runtime "erlang" erl -eval 'erlang:display(erlang:system_info(otp_release)), halt().' -noshell || verify_errors=$((verify_errors + 1))
+verify_runtime "elixir" elixir --version || verify_errors=$((verify_errors + 1))
+verify_runtime "gleam" gleam --version || verify_errors=$((verify_errors + 1))
+
+if [[ $verify_errors -gt 0 ]]; then
+    log_error "$verify_errors runtime verification error(s) found"
+    exit 1
+fi
+
+log_success "asdf runtimes ready."
