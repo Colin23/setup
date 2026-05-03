@@ -58,6 +58,11 @@ A change (module, tool, dotfile, etc.) is done when:
 Authoritative tool data lives in the modules themselves.
 Check [tool-inventory.md](tool-inventory.md) for details.
 
+### Runtime versions via asdf
+
+Global runtime versions are managed outside this repo in the dotfiles repo via `~/.tool-versions`.
+The setup repo installs `asdf`, ensures plugins exist, and installs versions from that file.
+
 ---
 
 ## Adding or Removing a Dotfile
@@ -98,16 +103,17 @@ The personal baseline (shell config, prompt, personal git identity) doesn't chan
 |--------------|---------------------------------------------------|-------------------------------------------------------------------|
 | Static       | `./scripts/lint`                                  | ShellCheck + shfmt on all shell scripts                           |
 | Integration  | `./tests/docker-arch` and `./tests/docker-ubuntu` | Fresh install, idempotency, drift recovery for non-system modules |
-| Real machine | `./run` (current laptop)                          | Modules that need GUI, systemd, or SSH to private repos           |
+| Real machine | `./run` (current laptop)                          | Modules that need GUI, systemd, SSH to private repos              |
 
 ### What can't be tested in Docker
 
-| Module        | Why                                | How to test          |
-|---------------|------------------------------------|----------------------|
-| `30-git-ssh`  | Interactive prompts, SSH to GitHub | Real machine         |
-| `40-firewall` | Requires systemd + iptables        | VM or real machine   |
-| `50-browser`  | GUI application                    | Real machine         |
-| `80-dotfiles` | Requires SSH to clone private repo | Real machine (or VM) |
+| Module        | Why                                      | How to test          |
+|---------------|------------------------------------------|----------------------|
+| `30-git-ssh`  | Interactive prompts, SSH to GitHub       | Real machine         |
+| `40-firewall` | Requires systemd + iptables              | VM or real machine   |
+| `50-browser`  | GUI application                          | Real machine         |
+| `80-dotfiles` | Requires SSH to clone private repo       | Real machine (or VM) |
+| `81-runtimes` | Depends on dotfiles and large toolchains | Real machine         |
 
 `99-manual` is safe in Docker — it only prints text.
 
