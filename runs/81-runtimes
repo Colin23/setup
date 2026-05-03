@@ -43,13 +43,15 @@ ASDF_PLUGINS=(
 )
 
 ensure_asdf_in_shell() {
+    local asdf_script_path="${ASDF_DATA_DIR:-$HOME/.asdf}/asdf.sh"
+
     if has_cmd asdf; then
         return 0
     fi
 
-    if [[ -f "$HOME/.asdf/asdf.sh" ]]; then
-        # shellcheck disable=SC1091
-        source "$HOME/.asdf/asdf.sh"
+    if [[ -f "$asdf_script_path" ]]; then
+        # shellcheck disable=SC1090
+        source "$asdf_script_path"
     fi
 
     if has_cmd brew; then
@@ -95,9 +97,13 @@ install_asdf() {
             fi
             ;;
         ubuntu | debian)
-            log_warn "asdf automation is not implemented yet on $SETUP_OS"
-            log_info "Install asdf manually/from source, then rerun './run --only runtimes'"
-            return 1
+            if has_cmd asdf; then
+                log_info "asdf already installed"
+            else
+                log_warn "asdf automation is not implemented yet on $SETUP_OS"
+                log_info "Install asdf manually/from source, then rerun './run --only runtimes'"
+                return 1
+            fi
             ;;
     esac
 
