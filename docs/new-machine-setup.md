@@ -49,7 +49,7 @@ Install system packages, CLI tools, shell, and dev quality tools. Dotfiles and g
 isn't set up yet.
 
 ```bash
-./run --skip git-ssh,dotfiles,firewall,browser
+./run --skip git-ssh,dotfiles,firewall,browser,runtimes
 ```
 
 This runs:
