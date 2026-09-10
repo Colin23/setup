@@ -71,13 +71,13 @@ if [[ ! -d "$RUNS_DIR" ]]; then
     exit 1
 fi
 
-# Discover and sort deterministically by filename
-mapfile -t ALL_SCRIPTS < <(find "$RUNS_DIR" -maxdepth 1 -type f -executable | sort)
-
-if [[ ${#ALL_SCRIPTS[@]} -eq 0 ]]; then
-    log_warn "No executable modules found in $RUNS_DIR"
-    exit 0
-fi
+# Discover and sort deterministically by filename (Cross-platform for Linux & macOS)
+if [[ "${SETUP_OS:-}" == "macos" ]] || [[ "$(uname)" == "Darwin" ]]; then
+    # macOS / BSD find uses permission flags instead of -executable
+    mapfile -t ALL_SCRIPTS < <(find "$RUNS_DIR" -maxdepth 1 -type f \( -perm -u+x -o -perm -g+x -o -perm -o+x \) | sort)
+else
+    # Linux / GNU find
+    mapfile -t ALL_SCRIPTS < <(find "$RUNS_DIR" -maxdepth 1 -type f -executable | sort)
 
 # ──────────────────────────────────────────────
 # Filtering Logic
