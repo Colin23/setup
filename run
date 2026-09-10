@@ -72,12 +72,17 @@ if [[ ! -d "$RUNS_DIR" ]]; then
 fi
 
 # Discover and sort deterministically by filename (Cross-platform for Linux & macOS)
+ALL_SCRIPTS=()
 if [[ "${SETUP_OS:-}" == "macos" ]] || [[ "$(uname)" == "Darwin" ]]; then
     # macOS / BSD find uses permission flags instead of -executable
-    mapfile -t ALL_SCRIPTS < <(find "$RUNS_DIR" -maxdepth 1 -type f \( -perm -u+x -o -perm -g+x -o -perm -o+x \) | sort)
+    while IFS= read -r script; do
+        ALL_SCRIPTS+=("$script")
+    done < <(find "$RUNS_DIR" -maxdepth 1 -type f \( -perm -u+x -o -perm -g+x -o -perm -o+x \) | sort)
 else
     # Linux / GNU find
-    mapfile -t ALL_SCRIPTS < <(find "$RUNS_DIR" -maxdepth 1 -type f -executable | sort)
+    while IFS= read -r script; do
+        ALL_SCRIPTS+=("$script")
+    done < <(find "$RUNS_DIR" -maxdepth 1 -type f -executable | sort)
 fi
 
 if [[ ${#ALL_SCRIPTS[@]} -eq 0 ]]; then
