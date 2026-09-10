@@ -29,7 +29,10 @@ if [[ ${#MISSING[@]} -gt 0 ]]; then
 fi
 
 # Gather all shell scripts by shebang or known paths
-mapfile -t SCRIPTS < <(find "$PROJECT_DIR" -type f \
+SCRIPTS=()
+while IFS= read -r script; do
+    SCRIPTS+=("$script")
+done < <(find "$PROJECT_DIR" -type f \
     \( -path "*/runs/*" -o -path "*/lib/*" -o -path "*/tests/*" -o -path "*/scripts/*" -o -name "run" \) \
     ! -path "*/archive/*" ! -path "*/.git/*" ! -path "*/.oh-my-zsh/*" | sort)
 
