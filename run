@@ -78,6 +78,12 @@ if [[ "${SETUP_OS:-}" == "macos" ]] || [[ "$(uname)" == "Darwin" ]]; then
 else
     # Linux / GNU find
     mapfile -t ALL_SCRIPTS < <(find "$RUNS_DIR" -maxdepth 1 -type f -executable | sort)
+fi
+
+if [[ ${#ALL_SCRIPTS[@]} -eq 0 ]]; then
+    log_warn "No executable modules found in $RUNS_DIR"
+    exit 0
+fi
 
 # ──────────────────────────────────────────────
 # Filtering Logic
