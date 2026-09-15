@@ -68,9 +68,8 @@ DEV_DIRS=(
     "$DEV_DIR/personal"
     "$DEV_DIR/obsidian"
     # ── Work directories (update when changing employers) ──
-    "$DEV_DIR/work/mbag/github"
-    "$DEV_DIR/work/mbag/gitlab"
-    "$DEV_DIR/work-ssc"
+    "$DEV_DIR/work/azure"
+    "$DEV_DIR/work/gitlab"
 )
 
 for dir in "${DEV_DIRS[@]}"; do
@@ -103,9 +102,8 @@ ensure_symlink "$DOTFILES_DIR/.gitconfig-pers" "$DEV_DIR/personal/.gitconfig-per
 # Remove old entries, add new ones, rerun ./run.
 log_info "Symlinking work-specific configs..."
 
-ensure_symlink "$DOTFILES_DIR/.gitconfig-work-mbag-github" "$DEV_DIR/work/mbag/github/.gitconfig-work-mbag-github"
-ensure_symlink "$DOTFILES_DIR/.gitconfig-work-mbag-gitlab" "$DEV_DIR/work/mbag/gitlab/.gitconfig-work-mbag-gitlab"
-ensure_symlink "$DOTFILES_DIR/.gitconfig-work-ssc" "$DEV_DIR/work-ssc/.gitconfig-work-ssc"
+ensure_symlink "$DOTFILES_DIR/.gitconfig-work-azure" "$DEV_DIR/work/azure/.gitconfig-work-azure"
+ensure_symlink "$DOTFILES_DIR/.gitconfig-work-gitlab" "$DEV_DIR/work/gitlab/.gitconfig-work-gitlab"
 
 # ──────────────────────────────────────────────
 # Verify
@@ -131,9 +129,8 @@ VERIFY_LINKS=(
     "$HOME/.tool-versions"
     "$HOME/.ssh/config"
     "$DEV_DIR/personal/.gitconfig-pers"
-    "$DEV_DIR/work/mbag/github/.gitconfig-work-mbag-github"
-    "$DEV_DIR/work/mbag/gitlab/.gitconfig-work-mbag-gitlab"
-    "$DEV_DIR/work-ssc/.gitconfig-work-ssc"
+    "$DEV_DIR/work/azure/.gitconfig-work-azure"
+    "$DEV_DIR/work/gitlab/.gitconfig-work-gitlab"
 )
 
 for link in "${VERIFY_LINKS[@]}"; do
