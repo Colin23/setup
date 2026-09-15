@@ -13,6 +13,7 @@ A freshly installed OS with:
 
 - A user account with `sudo` access
 - Network connectivity
+- brew installed (only relevant for macOS)
 
 ---
 
@@ -30,6 +31,12 @@ sudo pacman -Sy --noconfirm git curl openssh sudo
 
 ```bash
 sudo apt-get update && sudo apt-get install -y git curl openssh-client
+```
+
+#### MacOS
+
+```bash
+brew upgrade && brew install git curl openssh
 ```
 
 ### Step 1 — Clone setup repo via HTTPS (~30 seconds)
@@ -117,7 +124,21 @@ On a managed/work laptop where the firewall can't (or shouldn't) be configured:
 
 Run a second time. Should complete with zero changes and zero failures.
 
-### Step 7 — Start a new shell
+### Step 7 - Change `setup` repo remote
+
+Change remote from HTTPS to SSH
+
+```bash
+git remote set-url origin git@github.com:Colin23/setup.git
+```
+
+Verify remote
+
+```bash
+git remote -v
+```
+
+### Step 8 — Start a new shell
 
 ```bash
 exec zsh
@@ -129,12 +150,13 @@ The full environment is now active: zsh + starship + plugins + personal `.zshrc`
 
 ## Summary of Manual Steps
 
-| Step | Action                       | Time |
-|------|------------------------------|------|
-| 0    | Install git, curl, openssh   | 30s  |
-| 1    | Clone setup repo (HTTPS)     | 30s  |
-| 3    | Add SSH key to GitHub        | ~90s |
-| 7    | Start new shell (`exec zsh`) | 5s   |
+| Step | Action                              | Time |
+|------|-------------------------------------|------|
+| 0    | Install git, curl, openssh          | 30s  |̨
+| 1    | Clone setup repo (HTTPS)            | 30s  |
+| 3    | Add SSH key to GitHub               | ~90s |
+| 7    | Change git remote from HTTPS to SSH | 2s   |̨
+| 7    | Start new shell (`exec zsh`)        | 5s   |
 
 Everything else is automated.
 
